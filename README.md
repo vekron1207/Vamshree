@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vaamshri
 
-## Getting Started
+Ecommerce storefront + inventory/order admin for vaamshri.com.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Next.js 16 (App Router, Cache Components) + TypeScript + Tailwind CSS 4
+- Prisma 7 + MySQL (via the `@prisma/adapter-mariadb` driver adapter)
+- Razorpay for payments
+- Custom cookie-based session auth for the admin panel (no third-party auth provider)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Copy `.env.example` to `.env` and fill in a local MySQL `DATABASE_URL` and Razorpay test keys.
+2. Install dependencies: `npm install`
+3. Push the schema to your database: `npx prisma db push`
+4. Create the first admin login (reads `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` from `.env`):
+   `npm run db:seed`
+5. Start the dev server: `npm run dev`
+   - Storefront: http://localhost:3000
+   - Admin: http://localhost:3000/admin/login
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Razorpay webhook
 
-## Learn More
+In the Razorpay dashboard, add a webhook pointing to `/api/webhooks/razorpay` with the
+`payment.captured` and `order.paid` events enabled, and put its signing secret in
+`RAZORPAY_WEBHOOK_SECRET`. This is the source of truth for marking an order paid and
+decrementing stock - the client-side checkout callback also verifies and marks the
+order paid immediately for a fast confirmation page, but the webhook covers cases
+where the browser never gets to call back (closed tab, network drop, etc).
 
-To learn more about Next.js, take a look at the following resources:
+## Deploying to Hostinger
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This project targets Hostinger's shared/"Unlimited" hosting plan, which supports a
+Node.js app (via hPanel) and a MySQL database, but **not** PostgreSQL - hence the
+MySQL + driver-adapter setup above.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Create a MySQL database in hPanel and note the connection details.
+2. Create a Node.js app in hPanel pointing at this repo, with `npm run build` as the
+   build command and `npm run start` as the start command.
+3. Set the environment variables from `.env.example` in hPanel's Node.js app settings.
+4. Run `npx prisma db push` and `npm run db:seed` once against the production database
+   (via hPanel's SSH access or a one-off deploy step).
+5. Admin image uploads are stored in `<app folder>/uploads` (gitignored) and served from
+   `/media/...`. A `git pull` deploy leaves this folder alone, but if a deploy ever replaces the
+   whole app folder, copy `uploads/` across (or symlink it to a folder outside the app) so
+   product and collection photos aren't lost. Back it up along with the database.
 
-## Deploy on Vercel
+## Store behaviour worth knowing
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Stock is reserved when checkout starts** and handed back if the payment never completes
+  (after 45 minutes, or straight away if the payment window can't open) or an admin cancels the
+  order. Two people can't buy the last piece. If a payment arrives after its checkout expired and
+  the stock is gone, the order is marked paid with a NEEDS ATTENTION note on the admin order page
+  so you can refund or contact the customer.
+- **Sizes** (rings etc.): add them under Sizes on the product form. Each size has its own stock and
+  the product's stock is the total.
+- **Settings** (Admin > Settings): shipping fee / free-shipping threshold, business details for
+  invoices, low-stock level. **Discounts** (Admin > Discounts): percent or flat codes with minimum
+  spend, dates and usage caps.
+- Orders: add courier + tracking in the order page (customers see it in their account), print an
+  invoice, export orders/customers as CSV. Set `NEXT_PUBLIC_SITE_URL` so sitemap, canonical links
+  and social previews use the real domain.
+- A WhatsApp chat button appears automatically once a WhatsApp number is saved on Admin > Pages > Contact.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Known gaps / next steps
+
+- Not built (needs outside services): order emails/SMS, password reset, phone OTP, courier
+  booking/tracking APIs. Razorpay checkout has not been exercised end to end - add real keys in
+  test mode and run a test payment before launch.
+- Rate limits and throttles are in memory, so they reset when the app restarts.
+- `getActiveProducts` / `getProductBySlug` (`src/lib/products.ts`) are intentionally
+  uncached for now. Once a live database is connected, add `"use cache"` +
+  `cacheTag("products")` back for performance (the admin actions already call
+  `updateTag("products")` on mutation, ready for this).
