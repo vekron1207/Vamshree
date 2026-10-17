@@ -25,6 +25,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: "Vaamshri | Adorne your story", template: "%s | Vaamshri" },
   description: "Adorne your story - fine jewellery by Vaamshri",
+  ...(process.env.PREVIEW_MODE === "1" ? { robots: { index: false, follow: false } } : {}),
   openGraph: { siteName: "Vaamshri", type: "website", locale: "en_IN" },
 };
 
