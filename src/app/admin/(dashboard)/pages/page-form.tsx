@@ -10,7 +10,7 @@ const inputClass =
 const card = "rounded-2xl bg-paper p-5 shadow-[0_1px_2px_rgba(18,20,15,0.06)] sm:p-6";
 
 export type PageFormInitial = {
-  slug: "about" | "contact";
+  slug: "about" | "contact" | "policies";
   title: string;
   intro: string;
   body: string;

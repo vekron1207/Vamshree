@@ -15,4 +15,5 @@ export const POLICY_LINKS = [
   { slug: "order-cancellation-policy", label: "Order and Cancellation Policy" },
   { slug: "privacy-policy", label: "Privacy Policy" },
   { slug: "terms", label: "Terms & Conditions" },
+  { slug: "policies", label: "Policies & Terms" },
 ] as const;

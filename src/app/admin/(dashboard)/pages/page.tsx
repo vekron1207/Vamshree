@@ -11,6 +11,7 @@ export const instant = false;
 const TABS: { slug: EditablePageSlug; label: string }[] = [
   { slug: "about", label: "About Us" },
   { slug: "contact", label: "Contact Us" },
+  { slug: "policies", label: "Policies & Terms" },
 ];
 
 export default async function AdminPagesPage(props: PageProps<"/admin/pages">) {

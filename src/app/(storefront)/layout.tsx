@@ -4,7 +4,7 @@ import { CartProvider } from "@/lib/cart-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
 import { SiteHeader } from "./site-header";
 import { CATEGORIES, POLICY_LINKS } from "@/lib/site-content";
-import { BrandMark, InstagramQr } from "@/components/brand";
+import { InstagramQr } from "@/components/brand";
 import { WhatsAppButton } from "./whatsapp-button";
 import { DrawerCollectionLinks, FooterCollectionLinks } from "./collection-links";
 
@@ -34,11 +34,11 @@ export default function StorefrontLayout({
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <BrandMark size="md" />
-              <p className="mt-4 max-w-xs font-tagline text-lg italic leading-relaxed text-ink/70">
-                Adorne your story.
+              <p className="font-display text-sm tracking-[0.1em] text-forest">Connect</p>
+              <p className="mt-5 max-w-xs text-sm leading-relaxed text-ink/65">
+                Tag us on Instagram to get featured and be a part of the Vaamshri family.
               </p>
-              <figure className="mt-7">
+              <figure className="mt-6">
                 <InstagramQr />
                 <figcaption className="mt-3 text-xs uppercase tracking-[0.16em] text-ink/60">
                   Scan to follow us on Instagram

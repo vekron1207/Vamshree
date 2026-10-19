@@ -14,6 +14,7 @@ import type { ProductCardData } from "@/components/product-card";
 // matters for sales: whether a sale window is open depends on "now".
 
 const cardInclude = {
+  _count: { select: { variants: true } },
   images: { orderBy: { position: "asc" as const }, take: 1 },
   collection: { select: { name: true, ...SALE_FIELDS } },
 };
@@ -25,6 +26,7 @@ type CardSource = {
   price: unknown;
   compareAtPrice: unknown;
   stock: number;
+  _count?: { variants: number };
   images: { url: string }[];
   collection: ({ name: string } & Parameters<typeof priceFor>[2]) | null;
 };
@@ -43,6 +45,7 @@ function toCard(p: CardSource, withEyebrow: boolean): ProductCardData {
     originalPrice: pricing.originalPrice,
     saleLabel: pricing.saleLabel,
     stock: p.stock,
+    hasSizes: (p._count?.variants ?? 0) > 0,
     image: p.images[0]?.url ?? null,
     eyebrow: withEyebrow ? (p.collection?.name ?? null) : null,
   };

@@ -2,7 +2,7 @@ import "server-only";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export const EDITABLE_PAGES = ["about", "contact"] as const;
+export const EDITABLE_PAGES = ["about", "contact", "policies"] as const;
 export type EditablePageSlug = (typeof EDITABLE_PAGES)[number];
 
 export type ContactDetails = {
@@ -31,6 +31,14 @@ const DEFAULTS: Record<EditablePageSlug, Omit<SitePageContent, "updatedAt">> = {
     title: "About Vaamshri",
     intro: "At Vaamshri, we believe every story deserves more than to be told. It deserves to be adorned.",
     body: "The milestones, the quiet victories, the moments that made you who you are today. Your story isn’t ordinary; it’s yours, and that makes it beautiful. Just like the right piece of jewellery doesn’t just complete an outfit, it becomes a part of your story, worn close, carried with you, and remembered forever.",
+    imageUrl: null,
+    contact: EMPTY_CONTACT,
+  },
+  policies: {
+    slug: "policies",
+    title: "Policies & Terms",
+    intro: "",
+    body: "",
     imageUrl: null,
     contact: EMPTY_CONTACT,
   },

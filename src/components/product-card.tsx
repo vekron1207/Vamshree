@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ViewTransition } from "react";
 import { formatINR } from "@/lib/format";
 import { WishlistButton } from "./wishlist-button";
+import { QuickAddButton } from "./quick-add-button";
 
 export type ProductCardData = {
   id: string;
@@ -11,6 +12,7 @@ export type ProductCardData = {
   originalPrice?: number | null;
   saleLabel?: string | null;
   stock: number;
+  hasSizes?: boolean;
   image: string | null;
   eyebrow?: string | null;
 };
@@ -64,6 +66,15 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         </p>
       </div>
     </Link>
+    <QuickAddButton
+      productId={product.id}
+      slug={product.slug}
+      name={product.name}
+      price={product.price}
+      image={product.image}
+      stock={product.stock}
+      hasSizes={Boolean(product.hasSizes)}
+    />
     </div>
   );
 }

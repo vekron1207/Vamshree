@@ -108,9 +108,9 @@ export default function Home() {
       <section id="collections" className="scroll-mt-20 bg-paper px-6 py-20 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <Reveal className="text-center">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-gold">Our stories</p>
+            <p className="text-[12px] tracking-[0.2em] text-gold">Our Collection, Your Story</p>
             <h2 className="mt-3 font-display text-3xl text-forest sm:text-4xl">
-              Explore our inaugural collections
+              Explore Vaamshri Inaugural Collections.
             </h2>
           </Reveal>
 
