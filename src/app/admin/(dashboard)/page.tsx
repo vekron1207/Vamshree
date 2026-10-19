@@ -17,6 +17,7 @@ export default async function AdminDashboardPage() {
   await expireStalePendingOrders();
   const stats = await getDashboardStats(30);
   const { lowStockThreshold } = await getStoreSettings();
+  const newEnquiries = await prisma.enquiry.count({ where: { isReplied: false } });
   const soldOut = await prisma.product.count({ where: { isActive: true, stock: 0 } });
   const lowStock = await prisma.product.findMany({
     where: { isActive: true, stock: { gt: 0, lte: lowStockThreshold } },
@@ -52,6 +53,19 @@ export default async function AdminDashboardPage() {
             <span className="text-ink/70">still need a price before they can go live.</span>
           </span>
           <span className="shrink-0 text-forest">Review &rarr;</span>
+        </Link>
+      ) : null}
+
+      {newEnquiries > 0 ? (
+        <Link
+          href="/admin/enquiries"
+          className="flex items-center justify-between gap-4 rounded-xl border border-gold/40 bg-gold-soft/30 px-5 py-4 text-sm transition-colors hover:bg-gold-soft/50"
+        >
+          <span>
+            <strong className="font-medium text-forest">{newEnquiries} new {newEnquiries === 1 ? "message" : "messages"}</strong>{" "}
+            <span className="text-ink/70">from the Contact page {newEnquiries === 1 ? "is" : "are"} waiting for a reply.</span>
+          </span>
+          <span className="shrink-0 text-forest">Open &rarr;</span>
         </Link>
       ) : null}
 

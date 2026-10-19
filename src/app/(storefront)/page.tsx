@@ -5,16 +5,26 @@ import { CATEGORIES } from "@/lib/site-content";
 import { getVisibleCollections } from "@/lib/collections";
 import { Reveal } from "@/components/reveal";
 import { BrandMark } from "@/components/brand";
-import { HeroArch } from "./hero-arch";
+import { Slider, Slide } from "@/components/slider";
+import { ProductCard } from "@/components/product-card";
+import { getActiveProducts } from "@/lib/products";
+import { HeroReel } from "./hero-reel";
 
-const HERO_IMAGES = CATEGORIES.map((c) => ({ src: c.image, label: c.label }));
+const TICKER = [
+  "Adorne your story",
+  "Our collection, your story",
+  "Inaugural collections",
+  "For every you, every story",
+  "Tag us on Instagram",
+];
 
 export default function Home() {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden px-6 pb-20 pt-10 sm:pt-16 lg:pb-28">
-        <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
+      <section className="relative overflow-hidden px-6 pb-24 pt-10 sm:pt-16 lg:pb-32">
+        <div aria-hidden className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-gold-soft/40 blur-3xl" />
+        <div className="mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
           <div className="text-center lg:text-left">
             <BrandMark size="xl" priority className="animate-bloom-in mx-auto lg:mx-0" />
             <h1
@@ -23,7 +33,7 @@ export default function Home() {
             >
               Adorne
               <br />
-              Your Story
+              <span className="text-gold">Your</span> Story
             </h1>
             <p
               className="animate-rise-in mx-auto mt-6 max-w-md font-tagline text-xl italic leading-relaxed text-ink/70 sm:text-2xl lg:mx-0"
@@ -54,36 +64,42 @@ export default function Home() {
           </div>
 
           <div className="animate-rise-in" style={{ animationDelay: "0.3s" }}>
-            <HeroArch images={HERO_IMAGES} />
+            <HeroReel />
           </div>
         </div>
       </section>
+
+      {/* Ticker */}
+      <div className="overflow-hidden py-3" aria-hidden>
+        <div className="-rotate-[1.2deg] overflow-hidden bg-forest py-3.5 text-gold">
+          <div className="flex w-max animate-marquee gap-12 whitespace-nowrap font-display text-sm tracking-[0.2em] uppercase">
+            {[0, 1].map((n) =>
+              TICKER.map((t) => (
+                <span key={`${n}-${t}`} className="flex items-center gap-12">
+                  {t}
+                  <span>&#10022;</span>
+                </span>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Shop by category */}
       <section className="px-6 py-20 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <Reveal className="text-center">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-gold">Vaamshri collection</p>
+            <p className="text-[11px] uppercase tracking-[0.24em] text-gold">Vaamshri Jewellery</p>
             <h2 className="mt-3 font-display text-3xl text-forest sm:text-4xl">Shop by category</h2>
           </Reveal>
 
-          <div className="mt-12 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-5">
-            {CATEGORIES.map((category, i) => {
-              // Odd one out on the 2-column mobile/tablet grid spans full width
-              const wide = i === CATEGORIES.length - 1;
+          <Slider label="categories" className="mt-12">
+            {CATEGORIES.map((category) => {
               return (
-              <Reveal
-                key={category.slug}
-                delay={i * 90}
-                className={wide ? "col-span-2 lg:col-span-1" : ""}
-              >
+              <Slide key={category.slug} className="w-[58%] sm:w-[31%] lg:w-[calc(20%-1.2rem)]">
                 <Link
                   href={`/products?category=${category.slug}`}
-                  className={`group relative block overflow-hidden ${
-                    wide
-                      ? "aspect-[8/5] rounded-t-[2rem] lg:aspect-[4/5] lg:rounded-t-[999px]"
-                      : "aspect-[4/5] rounded-t-[999px]"
-                  }`}
+                  className="group relative block aspect-[4/5] overflow-hidden rounded-t-[999px]"
                 >
                   <Image
                     src={category.image}
@@ -97,9 +113,30 @@ export default function Home() {
                     {category.label}
                   </span>
                 </Link>
-              </Reveal>
+              </Slide>
               );
             })}
+          </Slider>
+        </div>
+      </section>
+
+      {/* Fresh drops */}
+      <section className="px-6 pb-20 sm:pb-24">
+        <div className="mx-auto max-w-6xl">
+          <Reveal className="text-center">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-gold">Just landed</p>
+            <h2 className="mt-3 font-display text-3xl text-forest sm:text-4xl">Fresh drops</h2>
+          </Reveal>
+          <Suspense fallback={<div className="mt-12 h-72 animate-pulse bg-ink/5" />}>
+            <FreshDrops />
+          </Suspense>
+          <div className="mt-10 text-center">
+            <Link
+              href="/products"
+              className="inline-block rounded-full border border-forest/30 px-8 py-3 text-[12px] uppercase tracking-[0.18em] text-forest transition-colors hover:bg-forest hover:text-cream"
+            >
+              Shop all jewellery
+            </Link>
           </div>
         </div>
       </section>
@@ -108,7 +145,7 @@ export default function Home() {
       <section id="collections" className="scroll-mt-20 bg-paper px-6 py-20 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <Reveal className="text-center">
-            <p className="text-[12px] tracking-[0.2em] text-gold">Our Collection, Your Story</p>
+            <p className="text-[11px] uppercase tracking-[0.24em] text-gold">Our Collection, Your Story</p>
             <h2 className="mt-3 font-display text-3xl text-forest sm:text-4xl">
               Explore Vaamshri Inaugural Collections.
             </h2>
@@ -184,9 +221,9 @@ async function HomeCollections() {
   if (collections.length === 0) return null;
 
   return (
-    <div className="mt-12 grid gap-x-8 gap-y-14 md:grid-cols-2">
-      {collections.map((collection, i) => (
-        <Reveal key={collection.id} delay={(i % 2) * 120}>
+    <Slider label="collections" autoplayMs={5500} className="mt-12">
+      {collections.map((collection) => (
+        <Slide key={collection.id} className="w-[88%] md:w-[calc(50%-1rem)]">
           <Link href={`/collections/${collection.slug}`} className="group block">
             <div className="relative aspect-[1200/630] overflow-hidden bg-cream">
               {collection.imageUrl ? (
@@ -221,8 +258,24 @@ async function HomeCollections() {
               </span>
             </div>
           </Link>
-        </Reveal>
+        </Slide>
       ))}
-    </div>
+    </Slider>
+  );
+}
+
+// Newest pieces, in-stock ones first
+async function FreshDrops() {
+  const all = await getActiveProducts({ sort: "new" });
+  const picks = [...all.filter((p) => p.stock > 0), ...all.filter((p) => p.stock <= 0)].slice(0, 10);
+  if (picks.length === 0) return null;
+  return (
+    <Slider label="new arrivals" className="mt-12">
+      {picks.map((p) => (
+        <Slide key={p.id} className="w-[62%] sm:w-[31%] lg:w-[calc(25%-1.15rem)]">
+          <ProductCard product={p} />
+        </Slide>
+      ))}
+    </Slider>
   );
 }

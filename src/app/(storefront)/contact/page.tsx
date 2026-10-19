@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getSitePage, toParagraphs } from "@/lib/site-pages";
+import { EnquiryForm } from "./enquiry-form";
 
 export default function ContactPage() {
   return (
@@ -76,6 +77,16 @@ async function ContactContent() {
       ) : (
         <p className="mt-14 text-center text-ink/50">Contact details are coming soon.</p>
       )}
+
+      <section className="mx-auto mt-16 max-w-2xl">
+        <h2 className="text-center font-display text-2xl text-forest sm:text-3xl">Send us a message</h2>
+        <p className="mx-auto mt-3 max-w-md text-center text-sm text-ink/60">
+          Questions about a piece, an order or a gift? Write to us here and we&rsquo;ll reply by email.
+        </p>
+        <div className="relative mt-8">
+          <EnquiryForm />
+        </div>
+      </section>
 
       {paragraphs.length > 0 ? (
         <div className="mx-auto mt-14 max-w-2xl space-y-5 leading-relaxed text-ink/75">

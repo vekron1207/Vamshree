@@ -31,6 +31,11 @@ const LINKS = [
     icon: "M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-6.5 8c.6-3.3 3.1-5 6.5-5s5.9 1.7 6.5 5",
   },
   {
+    href: "/admin/enquiries",
+    label: "Enquiries",
+    icon: "M3.5 5h13v9h-7l-3.5 3v-3h-2.5V5Z",
+  },
+  {
     href: "/admin/discounts",
     label: "Discounts",
     icon: "M4 10 10 4h6v6l-6 6-6-6Zm9-3.5h.01",

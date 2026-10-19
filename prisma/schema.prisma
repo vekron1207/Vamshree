@@ -238,3 +238,17 @@ model SiteSetting {
   value     Json
   updatedAt DateTime @updatedAt
 }
+
+// A question sent from the Contact page, answered by the owner later
+model Enquiry {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  message   String    @db.Text
+  isReplied Boolean   @default(false)
+  repliedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([isReplied, createdAt])
+}

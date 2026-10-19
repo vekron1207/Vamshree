@@ -122,3 +122,16 @@ body {
     animation: none !important;
   }
 }
+
+/* Scrolling ticker on the homepage */
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 36s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee { animation: none; }
+}
