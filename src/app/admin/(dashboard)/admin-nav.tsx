@@ -50,6 +50,11 @@ const LINKS = [
     label: "Settings",
     icon: "M10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0-4v2m0 10v2m7-7h-2M5 10H3m11.9-4.9-1.4 1.4M6.5 13.5l-1.4 1.4m0-9.8 1.4 1.4m7 7 1.4 1.4",
   },
+  {
+    href: "/admin/account",
+    label: "My account",
+    icon: "M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-6.5 8c.6-3.3 3.1-5 6.5-5s5.9 1.7 6.5 5",
+  },
 ];
 
 export function AdminNav({ orientation = "vertical" }: { orientation?: "vertical" | "horizontal" }) {

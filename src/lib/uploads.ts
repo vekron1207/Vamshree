@@ -4,14 +4,16 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
-// Uploads live in <project>/uploads (gitignored), not `public/`, so they don't
-// depend on build-time static file handling. Served by app/media/[...path].
-// The path must stay statically rooted at a fixed subfolder: a configurable
-// root makes Turbopack trace the entire project into the server bundle.
+// Uploads live outside public/ so they don't depend on build-time static file handling,
+// and are served by app/media/[...path]. Set UPLOADS_DIR to a folder that survives
+// deployments (hosts that deploy each build into a fresh folder would otherwise lose
+// them); without it they go in <project>/uploads (gitignored), which is fine locally.
+function uploadsRoot() {
+  return process.env.UPLOADS_DIR || path.join(process.cwd(), "uploads");
+}
+
 export function uploadPath(kind: UploadKind, name?: string) {
-  return name
-    ? path.join(process.cwd(), "uploads", kind, name)
-    : path.join(process.cwd(), "uploads", kind);
+  return name ? path.join(uploadsRoot(), kind, name) : path.join(uploadsRoot(), kind);
 }
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
