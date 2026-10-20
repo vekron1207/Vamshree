@@ -67,20 +67,19 @@ export async function getActiveProducts(filter?: {
       isActive: true,
       ...(filter?.categorySlug ? { category: { slug: filter.categorySlug } } : {}),
       ...(filter?.collectionSlug ? { collection: { slug: filter.collectionSlug } } : {}),
-      ...(filter?.search
-        ? {
-            OR: [
-              { name: { contains: filter.search } },
-              { description: { contains: filter.search } },
-              { collection: { name: { contains: filter.search } } },
-            ],
-          }
-        : {}),
     },
     orderBy: { createdAt: "desc" },
     include: cardInclude,
   });
-  let cards = products.map((p) => toCard(p, true));
+  // Text search runs here rather than in SQL: LIKE across mixed database collations
+  // fails on some hosts, and the catalogue is small enough to filter in memory.
+  const needle = filter?.search?.trim().toLowerCase();
+  const matches = needle
+    ? products.filter((p) =>
+        [p.name, p.description ?? "", p.collection?.name ?? ""].some((t) => t.toLowerCase().includes(needle))
+      )
+    : products;
+  let cards = matches.map((p) => toCard(p, true));
   // Prices include collection sales, so range and sort run on the final price
   const { minPrice, maxPrice, sort } = filter ?? {};
   if (minPrice !== undefined) cards = cards.filter((c) => c.price >= minPrice);

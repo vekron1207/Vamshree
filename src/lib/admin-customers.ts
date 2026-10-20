@@ -1,7 +1,7 @@
 import "server-only";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { OrderStatus } from "@/generated/prisma/client";
+import type { OrderStatus, Prisma } from "@/generated/prisma/client";
 import { normalizeIndianPhone } from "@/lib/phone";
 
 // Statuses where the customer actually paid
@@ -26,16 +26,19 @@ export async function listCustomers(opts: { query?: string; page?: number }) {
 
   // A phone typed any common way matches the normalised stored number
   const phone = q ? normalizeIndianPhone(q) : null;
-  const where = q
-    ? {
-        OR: [
-          { name: { contains: q } },
-          { email: { contains: q } },
-          { phone: { contains: q.replace(/[\s-]/g, "") } },
-          ...(phone ? [{ phone }] : []),
-        ],
-      }
-    : {};
+  let where: Prisma.CustomerWhereInput = {};
+  if (q) {
+    // COLLATE keeps LIKE working when the connection and column collations differ
+    const escape = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
+    const like = `%${escape(q)}%`;
+    const likePhone = `%${escape(q.replace(/[\s-]/g, ""))}%`;
+    const hits = await prisma.$queryRaw<{ id: string }[]>`
+      SELECT id FROM Customer
+      WHERE name LIKE ${like} COLLATE utf8mb4_unicode_ci
+         OR email LIKE ${like} COLLATE utf8mb4_unicode_ci
+         OR phone LIKE ${likePhone} COLLATE utf8mb4_unicode_ci`;
+    where = { OR: [{ id: { in: hits.map((h) => h.id) } }, ...(phone ? [{ phone }] : [])] };
+  }
 
   const [total, customers, allCount] = await Promise.all([
     prisma.customer.count({ where }),
