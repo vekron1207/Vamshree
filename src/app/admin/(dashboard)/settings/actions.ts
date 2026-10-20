@@ -50,3 +50,18 @@ export async function saveStore(fd: FormData): Promise<SettingsResult> {
   revalidatePath("/admin");
   return { ok: true };
 }
+
+export async function saveAnnouncement(fd: FormData): Promise<SettingsResult> {
+  await requireAdmin();
+  const text = String(fd.get("text") ?? "").trim().slice(0, 140);
+  const link = String(fd.get("link") ?? "").trim().slice(0, 300);
+  const enabled = fd.get("enabled") === "on";
+  if (enabled && !text) return { ok: false, error: "Write the message to show, or switch the bar off." };
+  if (link && !(link.startsWith("/") && !link.startsWith("//")) && !link.startsWith("https://")) {
+    return { ok: false, error: "The link must start with / (a page on this site) or https://" };
+  }
+  await writeSetting("announcement", { enabled, text, link });
+  revalidatePath("/admin/settings");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}

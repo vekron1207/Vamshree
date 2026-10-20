@@ -2,9 +2,9 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { useSubmit } from "@/lib/use-submit";
-import type { BusinessInfo, StoreSettings } from "@/lib/settings";
+import type { Announcement, BusinessInfo, StoreSettings } from "@/lib/settings";
 import type { ShippingRule } from "@/lib/shipping";
-import { saveBusiness, saveShipping, saveStore, type SettingsResult } from "./actions";
+import { saveAnnouncement, saveBusiness, saveShipping, saveStore, type SettingsResult } from "./actions";
 
 const inputClass =
   "w-full rounded-lg border border-ink/12 bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-forest/60 focus:ring-2 focus:ring-forest/10";
@@ -117,6 +117,27 @@ export function StoreCard({ store }: { store: StoreSettings }) {
     >
       <Field label="Low-stock level">
         <input name="lowStockThreshold" type="number" min={0} defaultValue={store.lowStockThreshold} className={inputClass} />
+      </Field>
+    </SettingsCard>
+  );
+}
+
+export function AnnouncementCard({ announcement }: { announcement: Announcement }) {
+  return (
+    <SettingsCard
+      title="Announcement bar"
+      description="A slim message above the header on every page. When it is off, the bar shows your best running collection sale automatically."
+      action={saveAnnouncement}
+    >
+      <label className="flex items-center gap-2.5 text-sm text-ink sm:col-span-2">
+        <input type="checkbox" name="enabled" defaultChecked={announcement.enabled} className="h-4 w-4 accent-forest" />
+        Show my own message
+      </label>
+      <Field label="Message" hint="Up to 140 characters, e.g. Free shipping on orders above Rs 2,999" className="sm:col-span-2">
+        <input name="text" maxLength={140} defaultValue={announcement.text} className={inputClass} />
+      </Field>
+      <Field label="Link (optional)" hint="Where the bar goes when clicked, e.g. /products or /collections/golden-hour-story" className="sm:col-span-2">
+        <input name="link" defaultValue={announcement.link} className={inputClass} />
       </Field>
     </SettingsCard>
   );

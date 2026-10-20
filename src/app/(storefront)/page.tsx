@@ -9,6 +9,7 @@ import { Slider, Slide } from "@/components/slider";
 import { ProductCard } from "@/components/product-card";
 import { getActiveProducts } from "@/lib/products";
 import { HeroReel } from "./hero-reel";
+import { SaleBanner } from "./sale-banner";
 
 const TICKER = [
   "Adorne your story",
@@ -84,6 +85,11 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Sale banner (only while a sale is running) */}
+      <Suspense fallback={null}>
+        <SaleBanner />
+      </Suspense>
 
       {/* Shop by category */}
       <section className="px-6 py-20 sm:py-24">

@@ -24,7 +24,10 @@ export const DEFAULT_BUSINESS: BusinessInfo = {
 export type StoreSettings = { lowStockThreshold: number };
 export const DEFAULT_STORE: StoreSettings = { lowStockThreshold: 3 };
 
-type Key = "shipping" | "business" | "store";
+export type Announcement = { enabled: boolean; text: string; link: string };
+export const DEFAULT_ANNOUNCEMENT: Announcement = { enabled: false, text: "", link: "" };
+
+type Key = "shipping" | "business" | "store" | "announcement";
 
 async function read<T>(key: Key, fallback: T): Promise<T> {
   await connection();
@@ -36,6 +39,7 @@ async function read<T>(key: Key, fallback: T): Promise<T> {
 export const getShippingRule = () => read<ShippingRule>("shipping", DEFAULT_SHIPPING);
 export const getBusinessInfo = () => read<BusinessInfo>("business", DEFAULT_BUSINESS);
 export const getStoreSettings = () => read<StoreSettings>("store", DEFAULT_STORE);
+export const getAnnouncement = () => read<Announcement>("announcement", DEFAULT_ANNOUNCEMENT);
 
 export async function writeSetting(key: Key, value: object) {
   await prisma.siteSetting.upsert({ where: { key }, update: { value }, create: { key, value } });

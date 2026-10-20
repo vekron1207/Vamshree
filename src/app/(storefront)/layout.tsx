@@ -6,6 +6,7 @@ import { SiteHeader } from "./site-header";
 import { CATEGORIES, POLICY_LINKS } from "@/lib/site-content";
 import { InstagramQr } from "@/components/brand";
 import { WhatsAppButton } from "./whatsapp-button";
+import { AnnouncementBar } from "./announcement-bar";
 import { DrawerCollectionLinks, FooterCollectionLinks } from "./collection-links";
 
 const currentYear = new Date().getFullYear();
@@ -18,6 +19,9 @@ export default function StorefrontLayout({
   return (
     <CartProvider>
       <WishlistProvider>
+      <Suspense fallback={null}>
+        <AnnouncementBar />
+      </Suspense>
       <SiteHeader
         drawerCollections={
           <Suspense fallback={<div className="mt-3 h-32 animate-pulse rounded bg-ink/5" />}>
