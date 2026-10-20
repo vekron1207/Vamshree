@@ -120,7 +120,7 @@ export function SiteHeader({ drawerCollections }: { drawerCollections: ReactNode
             <circle cx="10" cy="7" r="3.2" stroke="currentColor" strokeWidth="1.3" />
             <path d="M3.5 17c.8-3.2 3.3-4.8 6.5-4.8s5.7 1.6 6.5 4.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
           </svg>
-          <span className="hidden sm:inline">Account</span>
+          <span className="hidden lg:inline">Account</span>
         </Link>
         <Link
           href="/wishlist"
@@ -130,7 +130,7 @@ export function SiteHeader({ drawerCollections }: { drawerCollections: ReactNode
           <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden fill={wishIds.length > 0 ? "currentColor" : "none"}>
             <path d="M10 17s-6.5-4.1-6.5-8.6A3.6 3.6 0 0 1 10 6.3a3.6 3.6 0 0 1 6.5 2.1C16.5 12.9 10 17 10 17Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
           </svg>
-          <span className="hidden sm:inline">Wishlist</span>
+          <span className="hidden lg:inline">Wishlist</span>
         </Link>
         <Link
           href="/cart"
@@ -144,7 +144,7 @@ export function SiteHeader({ drawerCollections }: { drawerCollections: ReactNode
               strokeLinejoin="round"
             />
           </svg>
-          <span className="hidden sm:inline">Bag</span>
+          <span className="hidden lg:inline">Bag</span>
           {itemCount > 0 ? (
             <span
               key={itemCount}

@@ -4,12 +4,18 @@ import { Suspense } from "react";
 import { CATEGORIES } from "@/lib/site-content";
 import { getVisibleCollections } from "@/lib/collections";
 import { Reveal } from "@/components/reveal";
-import { BrandMark } from "@/components/brand";
 import { Slider, Slide } from "@/components/slider";
 import { ProductCard } from "@/components/product-card";
 import { getActiveProducts } from "@/lib/products";
-import { HeroReel } from "./hero-reel";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { HeroVideo } from "./hero-video";
 import { SaleBanner } from "./sale-banner";
+
+// A landscape cut is used on wide screens as soon as this file exists
+const WIDE_VIDEO = existsSync(join(process.cwd(), "public", "brand", "home-video-wide.mp4"))
+  ? "/brand/home-video-wide.mp4"
+  : null;
 
 const TICKER = [
   "Adorne your story",
@@ -22,50 +28,27 @@ const TICKER = [
 export default function Home() {
   return (
     <>
-      {/* Hero */}
-      <section className="relative overflow-hidden px-6 pb-24 pt-10 sm:pt-16 lg:pb-32">
-        <div aria-hidden className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-gold-soft/40 blur-3xl" />
-        <div className="mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
-          <div className="text-center lg:text-left">
-            <BrandMark size="xl" priority className="animate-bloom-in mx-auto lg:mx-0" />
-            <h1
-              className="animate-rise-in mt-6 font-display text-[clamp(2.6rem,6.4vw,5.4rem)] leading-[1.02] text-forest"
-              style={{ animationDelay: "0.2s" }}
+      {/* Hero: the film is the first thing visitors see */}
+      <section className="relative isolate flex h-[calc(100svh-4.5rem)] min-h-[30rem] items-end overflow-hidden bg-forest-deep sm:h-[calc(100svh-5rem)] lg:max-h-[56rem]">
+        <HeroVideo portraitSrc="/brand/home-video.mp4" wideSrc={WIDE_VIDEO} />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-forest-deep/80 via-forest-deep/10 to-transparent" />
+        <div className="relative mx-auto w-full max-w-6xl px-6 pb-8 text-center sm:pb-10 lg:text-left">
+          {/* The film already carries the logo, so the headline is for screen readers and search engines */}
+          <h1 className="sr-only">Vaamshri: Adorne Your Story. For every you, every story.</h1>
+          <div
+            className="animate-rise-in flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start"
+            style={{ animationDelay: '0.5s' }}
+          >
+            <Link
+              href="/products"
+              className="rounded-full bg-gold px-9 py-3.5 text-[12px] uppercase tracking-[0.18em] text-forest-deep transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-gold-soft"
             >
-              Adorne
-              <br />
-              <span className="text-gold">Your</span> Story
-            </h1>
-            <p
-              className="animate-rise-in mx-auto mt-6 max-w-md font-tagline text-xl italic leading-relaxed text-ink/70 sm:text-2xl lg:mx-0"
-              style={{ animationDelay: "0.35s" }}
-            >
-              For every you, every story.
-            </p>
-            <div
-              className="animate-rise-in mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start"
-              style={{ animationDelay: "0.5s" }}
-            >
-              <Link
-                href="/products"
-                className="rounded-full bg-forest px-9 py-3.5 text-[12px] uppercase tracking-[0.18em] text-cream transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-forest-deep"
-              >
-                Shop jewellery
-              </Link>
-              <Link
-                href="#collections"
-                className="group text-[12px] uppercase tracking-[0.18em] text-forest"
-              >
-                Explore collections
-                <span className="ml-2 inline-block transition-transform duration-300 group-hover:translate-y-0.5">
-                  &darr;
-                </span>
-              </Link>
-            </div>
-          </div>
-
-          <div className="animate-rise-in" style={{ animationDelay: "0.3s" }}>
-            <HeroReel />
+              Shop jewellery
+            </Link>
+            <Link href="#collections" className="group text-[12px] uppercase tracking-[0.18em] text-cream">
+              Explore collections
+              <span className="ml-2 inline-block transition-transform duration-300 group-hover:translate-y-0.5">&darr;</span>
+            </Link>
           </div>
         </div>
       </section>
