@@ -54,8 +54,8 @@ export default function Home() {
       </section>
 
       {/* Ticker */}
-      <div className="overflow-hidden py-3" aria-hidden>
-        <div className="-rotate-[1.2deg] overflow-hidden bg-forest py-3.5 text-gold">
+      <div className="overflow-hidden" aria-hidden>
+        <div className="overflow-hidden bg-forest py-3.5 text-gold">
           <div className="flex w-max animate-marquee gap-12 whitespace-nowrap font-display text-sm tracking-[0.2em] uppercase">
             {[0, 1].map((n) =>
               TICKER.map((t) => (
