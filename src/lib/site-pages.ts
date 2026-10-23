@@ -2,7 +2,15 @@ import "server-only";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export const EDITABLE_PAGES = ["about", "contact", "policies"] as const;
+export const POLICY_PAGES = [
+  "shipping-policy",
+  "returns-policy",
+  "refund-policy",
+  "order-cancellation-policy",
+  "privacy-policy",
+  "terms",
+] as const;
+export const EDITABLE_PAGES = ["about", "contact", ...POLICY_PAGES] as const;
 export type EditablePageSlug = (typeof EDITABLE_PAGES)[number];
 
 export type ContactDetails = {
@@ -34,9 +42,49 @@ const DEFAULTS: Record<EditablePageSlug, Omit<SitePageContent, "updatedAt">> = {
     imageUrl: null,
     contact: EMPTY_CONTACT,
   },
-  policies: {
-    slug: "policies",
-    title: "Policies & Terms",
+  "shipping-policy": {
+    slug: "shipping-policy",
+    title: "Shipping and Delivery",
+    intro: "",
+    body: "",
+    imageUrl: null,
+    contact: EMPTY_CONTACT,
+  },
+  "returns-policy": {
+    slug: "returns-policy",
+    title: "Return and Exchange Policy",
+    intro: "",
+    body: "",
+    imageUrl: null,
+    contact: EMPTY_CONTACT,
+  },
+  "refund-policy": {
+    slug: "refund-policy",
+    title: "Refund Policy",
+    intro: "",
+    body: "",
+    imageUrl: null,
+    contact: EMPTY_CONTACT,
+  },
+  "order-cancellation-policy": {
+    slug: "order-cancellation-policy",
+    title: "Order and Cancellation Policy",
+    intro: "",
+    body: "",
+    imageUrl: null,
+    contact: EMPTY_CONTACT,
+  },
+  "privacy-policy": {
+    slug: "privacy-policy",
+    title: "Privacy Policy",
+    intro: "",
+    body: "",
+    imageUrl: null,
+    contact: EMPTY_CONTACT,
+  },
+  "terms": {
+    slug: "terms",
+    title: "Terms & Conditions",
     intro: "",
     body: "",
     imageUrl: null,

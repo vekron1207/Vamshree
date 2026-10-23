@@ -11,7 +11,12 @@ export const instant = false;
 const TABS: { slug: EditablePageSlug; label: string }[] = [
   { slug: "about", label: "About Us" },
   { slug: "contact", label: "Contact Us" },
-  { slug: "policies", label: "Policies & Terms" },
+  { slug: "shipping-policy", label: "Shipping and Delivery" },
+  { slug: "returns-policy", label: "Return and Exchange Policy" },
+  { slug: "refund-policy", label: "Refund Policy" },
+  { slug: "order-cancellation-policy", label: "Order and Cancellation Policy" },
+  { slug: "privacy-policy", label: "Privacy Policy" },
+  { slug: "terms", label: "Terms & Conditions" },
 ];
 
 export default async function AdminPagesPage(props: PageProps<"/admin/pages">) {
@@ -27,13 +32,13 @@ export default async function AdminPagesPage(props: PageProps<"/admin/pages">) {
         <h1 className="mt-1 font-display text-3xl text-forest">Pages</h1>
       </header>
 
-      <nav className="flex gap-1 rounded-full bg-paper p-1 shadow-[0_1px_2px_rgba(18,20,15,0.06)] sm:w-fit">
+      <nav className="flex flex-wrap gap-1 rounded-2xl bg-paper p-1 shadow-[0_1px_2px_rgba(18,20,15,0.06)] sm:w-fit">
         {TABS.map((tab) => (
           <Link
             key={tab.slug}
             href={`/admin/pages?page=${tab.slug}`}
             aria-current={tab.slug === slug ? "page" : undefined}
-            className={`flex-1 rounded-full px-5 py-1.5 text-center text-sm transition-colors sm:flex-none ${
+            className={`rounded-full px-4 py-1.5 text-center text-sm transition-colors ${
               tab.slug === slug ? "bg-forest text-cream" : "text-ink/60 hover:text-ink"
             }`}
           >

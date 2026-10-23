@@ -17,7 +17,7 @@ export default async function AdminDashboardLayout({
   const initial = session.email.charAt(0).toUpperCase();
 
   return (
-    <div className="flex min-h-screen bg-[#f3efe6]">
+    <div className="flex min-h-screen bg-[#f3efe6] [--cream:#f6f1e7]">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-forest-deep px-4 py-6 lg:flex">
         <Link href="/admin" className="flex items-center gap-3 px-3">
           <BrandMark size="sm" />
