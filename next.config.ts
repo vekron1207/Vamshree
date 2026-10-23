@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   experimental: {
+    agentUpgrade: "security",
     // Shared hosting reports dozens of CPU cores but allows very few processes:
     // an unlimited worker pool gets the build killed (SIGABRT)
     cpus: 2,
