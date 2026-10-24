@@ -28,7 +28,7 @@ export type AnnouncementItem = { text: string; code: string; link: string };
 export type Announcement = { enabled: boolean; items: AnnouncementItem[] };
 export const DEFAULT_ANNOUNCEMENT: Announcement = { enabled: false, items: [] };
 
-type Key = "shipping" | "business" | "store" | "announcement" | "hero";
+type Key = "shipping" | "business" | "store" | "announcement" | "hero" | "saleBanner";
 
 async function read<T>(key: Key, fallback: T): Promise<T> {
   await connection();
@@ -79,5 +79,20 @@ export async function getHeroVideos(): Promise<HeroVideos> {
     mobile: mobile || DEFAULT_HERO.mobile,
     customDesktop: Boolean(desktop),
     customMobile: Boolean(mobile),
+  };
+}
+
+// The picture banner shown on the homepage during a sale
+export type SaleBanner = { enabled: boolean; imageUrl: string; alt: string; link: string };
+
+export async function getSaleBanner(): Promise<SaleBanner> {
+  const raw = await read<Record<string, unknown>>("saleBanner", {});
+  const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const imageUrl = str(raw.imageUrl);
+  return {
+    enabled: Boolean(raw.enabled) && imageUrl.length > 0,
+    imageUrl,
+    alt: str(raw.alt),
+    link: str(raw.link),
   };
 }

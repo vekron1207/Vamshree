@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin-auth";
 import { writeSetting } from "@/lib/settings";
+import { isAllowedImageUrl } from "@/lib/uploads";
 
 export type SettingsResult = { ok: true } | { ok: false; error: string };
 
@@ -94,6 +95,23 @@ export async function saveHeroVideos(fd: FormData): Promise<SettingsResult> {
     if (v && !HERO_URL.test(v)) return { ok: false, error: "Upload the video again; that file isn't valid." };
   }
   await writeSetting("hero", { desktop, mobile });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  return { ok: true };
+}
+
+export async function saveSaleBanner(fd: FormData): Promise<SettingsResult> {
+  await requireAdmin();
+  const enabled = fd.get("enabled") === "on";
+  const imageUrl = String(fd.get("imageUrl") ?? "").trim();
+  const alt = String(fd.get("alt") ?? "").trim().slice(0, 200);
+  const link = String(fd.get("link") ?? "").trim().slice(0, 300);
+  if (imageUrl && !isAllowedImageUrl(imageUrl)) return { ok: false, error: "That image link isn't allowed. Upload the picture again." };
+  if (enabled && !imageUrl) return { ok: false, error: "Upload a banner picture, or switch the banner off." };
+  if (link && !(link.startsWith("/") && !link.startsWith("//")) && !link.startsWith("https://")) {
+    return { ok: false, error: "The link must start with / (a page on this site) or https://" };
+  }
+  await writeSetting("saleBanner", { enabled, imageUrl, alt, link });
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
   return { ok: true };

@@ -1,13 +1,13 @@
 import { connection } from "next/server";
-import { DEFAULT_HERO, getAnnouncement, getBusinessInfo, getHeroVideos, getShippingRule, getStoreSettings } from "@/lib/settings";
-import { AnnouncementCard, BusinessCard, ShippingCard, StoreCard } from "./settings-forms";
+import { DEFAULT_HERO, getAnnouncement, getBusinessInfo, getHeroVideos, getSaleBanner, getShippingRule, getStoreSettings } from "@/lib/settings";
+import { AnnouncementCard, BusinessCard, SaleBannerCard, ShippingCard, StoreCard } from "./settings-forms";
 import { HeroVideoCard } from "./hero-video-card";
 
 export const instant = false;
 
 export default async function SettingsPage() {
   await connection();
-  const [rule, business, store, announcement, hero] = await Promise.all([getShippingRule(), getBusinessInfo(), getStoreSettings(), getAnnouncement(), getHeroVideos()]);
+  const [rule, business, store, announcement, hero, saleBanner] = await Promise.all([getShippingRule(), getBusinessInfo(), getStoreSettings(), getAnnouncement(), getHeroVideos(), getSaleBanner()]);
   return (
     <div className="space-y-6">
       <h1 className="font-display text-3xl text-forest">Settings</h1>
@@ -17,6 +17,7 @@ export default async function SettingsPage() {
           mobile={{ url: hero.mobile, custom: hero.customMobile }}
           defaults={DEFAULT_HERO}
         />
+        <SaleBannerCard banner={saleBanner} />
         <AnnouncementCard announcement={announcement} />
         <ShippingCard rule={rule} />
         <BusinessCard business={business} />

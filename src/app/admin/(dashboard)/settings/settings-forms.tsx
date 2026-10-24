@@ -2,9 +2,10 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { useSubmit } from "@/lib/use-submit";
-import type { Announcement, AnnouncementItem, BusinessInfo, StoreSettings } from "@/lib/settings";
+import type { Announcement, AnnouncementItem, BusinessInfo, SaleBanner, StoreSettings } from "@/lib/settings";
 import type { ShippingRule } from "@/lib/shipping";
-import { saveAnnouncement, saveBusiness, saveShipping, saveStore, type SettingsResult } from "./actions";
+import { saveAnnouncement, saveBusiness, saveSaleBanner, saveShipping, saveStore, type SettingsResult } from "./actions";
+import { ImageUploader } from "../image-uploader";
 
 const inputClass =
   "w-full rounded-lg border border-ink/12 bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-forest/60 focus:ring-2 focus:ring-forest/10";
@@ -182,6 +183,36 @@ export function AnnouncementCard({ announcement }: { announcement: Announcement 
           + Add a message
         </button>
       ) : null}
+    </SettingsCard>
+  );
+}
+
+export function SaleBannerCard({ banner }: { banner: SaleBanner }) {
+  return (
+    <SettingsCard
+      title="Sale banner"
+      description="A picture banner on the homepage, just below the categories. Switched off, the homepage shows a simple text banner for any collection sale that is running."
+      action={saveSaleBanner}
+    >
+      <label className="flex items-center gap-2.5 text-sm text-ink sm:col-span-2">
+        <input type="checkbox" name="enabled" defaultChecked={banner.enabled} className="h-4 w-4 accent-forest" />
+        Show the banner
+      </label>
+      <div className="sm:col-span-2">
+        <ImageUploader
+          name="imageUrl"
+          kind="pages"
+          initial={banner.imageUrl ? [banner.imageUrl] : []}
+          aspect="aspect-[3/2]"
+          hint="Best at 3:2, such as 1800 × 1200 pixels. It is shown whole, never cropped. JPG, PNG or WebP."
+        />
+      </div>
+      <Field label="Describe the picture" hint="Read out for people who can't see it, e.g. Festive Season Sale, flat 50% off" className="sm:col-span-2">
+        <input name="alt" maxLength={200} defaultValue={banner.alt} className={inputClass} />
+      </Field>
+      <Field label="Link (optional)" hint="Where a click goes, e.g. /products or /collections/golden-hour-story" className="sm:col-span-2">
+        <input name="link" defaultValue={banner.link} placeholder="/products" className={inputClass} />
+      </Field>
     </SettingsCard>
   );
 }
