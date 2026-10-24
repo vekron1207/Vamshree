@@ -43,6 +43,25 @@ export function HeroVideo({
     return () => io.disconnect();
   }, []);
 
+  // The browser only picks a <source> when the video loads, so crossing the
+  // desktop/mobile breakpoint (resizing the window, rotating a tablet) would leave
+  // the wrong film playing until a refresh. Re-run source selection on the change.
+  const userPaused = useRef(false);
+  useEffect(() => {
+    if (!wideSrc) return;
+    const mq = window.matchMedia("(min-width: 900px)");
+    const onChange = () => {
+      const el = main.current;
+      if (!el) return;
+      el.load();
+      if (!userPaused.current && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        el.play().catch(() => {});
+      }
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [wideSrc]);
+
   const showPlaying = playing && !reduced;
   const common = { muted: true, loop: true, playsInline: true, preload: "auto" as const, autoPlay: showPlaying };
 
@@ -78,10 +97,12 @@ export function HeroVideo({
           const vids = all();
           if (vids.length === 0) return;
           if (vids[0].paused) {
+            userPaused.current = false;
             setReduced(false);
             setPlaying(true);
             vids.forEach((v) => v.play().catch(() => {}));
           } else {
+            userPaused.current = true;
             setPlaying(false);
             vids.forEach((v) => v.pause());
           }
