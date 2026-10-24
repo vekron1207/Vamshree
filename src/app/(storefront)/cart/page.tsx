@@ -1,6 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import Button from "@mui/material/Button";
+import ButtonGroup from "@mui/material/ButtonGroup";
+import IconButton from "@mui/material/IconButton";
+import DeleteIcon from "@mui/icons-material/DeleteOutlineRounded";
+import AddIcon from "@mui/icons-material/AddRounded";
+import RemoveIcon from "@mui/icons-material/RemoveRounded";
+import { LinkButton } from "@/components/ui/link-button";
 import { cartKey, useCart } from "@/lib/cart-context";
 import { usePriceSync } from "../use-price-sync";
 import { formatINR } from "@/lib/format";
@@ -19,12 +25,9 @@ export default function CartPage() {
       <div className="mx-auto max-w-md px-6 py-24 text-center">
         <h1 className="font-display text-4xl text-forest">Your bag</h1>
         <p className="mt-6 font-tagline text-xl italic text-ink/70">Nothing here yet.</p>
-        <Link
-          href="/products"
-          className="mt-10 inline-block rounded-full bg-forest px-9 py-3.5 text-[12px] uppercase tracking-[0.18em] text-cream transition-colors hover:bg-forest-deep"
-        >
+        <LinkButton href="/products" variant="contained" size="large" sx={{ mt: 5 }}>
           Shop jewellery
-        </Link>
+        </LinkButton>
       </div>
     );
   }
@@ -56,34 +59,20 @@ export default function CartPage() {
                 </div>
                 <p className="mt-1 text-sm text-ink/50">{formatINR(item.price)} each</p>
                 <div className="mt-auto flex items-center justify-between pt-4">
-                  <div className="flex items-center rounded-full border border-forest/25">
-                    <button
-                      type="button"
-                      aria-label={`Decrease quantity of ${item.name}`}
-                      onClick={() => setQuantity(cartKey(item), item.quantity - 1)}
-                      className="h-9 w-9 text-forest transition-colors hover:text-gold"
-                    >
-                      &minus;
-                    </button>
-                    <span className="w-6 text-center text-sm tabular-nums" aria-live="polite">
+                  <ButtonGroup variant="outlined" size="small" aria-label="Quantity" sx={{ "& .MuiButton-root": { minWidth: 36, px: 0, py: 0.75, borderColor: "rgba(14,59,34,0.25)" } }}>
+                    <Button aria-label={`Decrease quantity of ${item.name}`} onClick={() => setQuantity(cartKey(item), item.quantity - 1)}>
+                      <RemoveIcon fontSize="small" />
+                    </Button>
+                    <Button disableRipple tabIndex={-1} aria-live="polite" sx={{ pointerEvents: "none", color: "text.primary", fontVariantNumeric: "tabular-nums" }}>
                       {item.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      aria-label={`Increase quantity of ${item.name}`}
-                      onClick={() => setQuantity(cartKey(item), item.quantity + 1)}
-                      className="h-9 w-9 text-forest transition-colors hover:text-gold"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeItem(cartKey(item))}
-                    className="text-[11px] uppercase tracking-[0.14em] text-ink/50 transition-colors hover:text-terracotta"
-                  >
-                    Remove
-                  </button>
+                    </Button>
+                    <Button aria-label={`Increase quantity of ${item.name}`} onClick={() => setQuantity(cartKey(item), item.quantity + 1)}>
+                      <AddIcon fontSize="small" />
+                    </Button>
+                  </ButtonGroup>
+                  <IconButton aria-label={`Remove ${item.name}`} onClick={() => removeItem(cartKey(item))} size="small" sx={{ color: "text.secondary", "&:hover": { color: "error.main" } }}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
                 </div>
               </div>
             </li>
@@ -109,18 +98,12 @@ export default function CartPage() {
             <p className="mt-4 text-sm text-gold">Add {formatINR(toFree)} more for free shipping.</p>
           ) : null}
           <p className="mt-3 text-xs text-ink/50">Discount codes can be applied at checkout.</p>
-          <Link
-            href="/checkout"
-            className="mt-8 block rounded-full bg-forest px-8 py-4 text-center text-[12px] uppercase tracking-[0.18em] text-cream transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-forest-deep"
-          >
+          <LinkButton href="/checkout" variant="contained" size="large" fullWidth sx={{ mt: 4 }}>
             Checkout
-          </Link>
-          <Link
-            href="/products"
-            className="mt-4 block text-center text-[11px] uppercase tracking-[0.16em] text-forest/70 hover:text-forest"
-          >
+          </LinkButton>
+          <LinkButton href="/products" variant="text" size="small" fullWidth sx={{ mt: 1.5 }}>
             Continue shopping
-          </Link>
+          </LinkButton>
         </aside>
       </div>
     </div>

@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import IconButton from "@mui/material/IconButton";
+import PauseIcon from "@mui/icons-material/PauseRounded";
+import PlayIcon from "@mui/icons-material/PlayArrowRounded";
 
 // Hero film. Never stretched: every layout scales the picture uniformly.
 //  - Phones and portrait tablets: the portrait film fills the screen.
@@ -91,8 +94,7 @@ export function HeroVideo({
         {wideSrc ? <source src={wideSrc} type="video/mp4" media="(min-width: 900px)" /> : null}
         <source src={portraitSrc} type="video/mp4" />
       </video>
-      <button
-        type="button"
+      <IconButton
         onClick={() => {
           const vids = all();
           if (vids.length === 0) return;
@@ -108,19 +110,22 @@ export function HeroVideo({
           }
         }}
         aria-label={showPlaying ? "Pause video" : "Play video"}
-        className="absolute bottom-5 right-5 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-cream/40 bg-forest-deep/50 text-cream backdrop-blur transition-colors hover:bg-forest-deep/80 sm:bottom-8 sm:right-8"
+        sx={{
+          position: "absolute",
+          bottom: { xs: 20, sm: 32 },
+          right: { xs: 20, sm: 32 },
+          zIndex: 10,
+          width: 44,
+          height: 44,
+          color: "#fff",
+          border: "1px solid rgba(255,255,255,0.4)",
+          backgroundColor: "rgba(6,20,12,0.5)",
+          backdropFilter: "blur(6px)",
+          "&:hover": { backgroundColor: "rgba(6,20,12,0.8)" },
+        }}
       >
-        {showPlaying ? (
-          <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" aria-hidden>
-            <rect x="0" y="0" width="4" height="14" />
-            <rect x="8" y="0" width="4" height="14" />
-          </svg>
-        ) : (
-          <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" aria-hidden>
-            <path d="M0 0l12 7-12 7z" />
-          </svg>
-        )}
-      </button>
+        {showPlaying ? <PauseIcon fontSize="small" /> : <PlayIcon fontSize="small" />}
+      </IconButton>
     </>
   );
 }

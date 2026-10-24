@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import { saveTracking, updateOrderStatus } from "./actions";
 import type { OrderStatus } from "@/generated/prisma/client";
 import { statusLabel } from "../status-badge";
+import { AdminInput, FormAlert, SubmitButton } from "@/components/ui/fields";
 import { useSubmit } from "@/lib/use-submit";
 
 const STATUSES: OrderStatus[] = [
@@ -28,7 +31,8 @@ export function OrderStatusForm({
 
   return (
     <span className="inline-flex flex-col items-end gap-1">
-      <select
+      <Select
+        size="small"
         value={status}
         disabled={pending}
         onChange={(e) =>
@@ -38,14 +42,15 @@ export function OrderStatusForm({
             if (!res.ok) setError(res.error);
           })
         }
-        className="rounded-full border border-ink/15 bg-paper px-4 py-2 text-sm text-ink outline-none transition-colors focus:border-forest/50 disabled:opacity-50"
+        inputProps={{ "aria-label": "Order status" }}
+        sx={{ borderRadius: 999, minWidth: 160, fontSize: 14 }}
       >
         {STATUSES.map((s) => (
-          <option key={s} value={s}>
+          <MenuItem key={s} value={s}>
             {statusLabel(s)}
-          </option>
+          </MenuItem>
         ))}
-      </select>
+      </Select>
       {error ? (
         <span role="alert" className="max-w-xs text-right text-xs text-terracotta">
           {error}
@@ -76,40 +81,18 @@ export function TrackingForm({
       setMessage(res.ok ? { ok: true, text: "Saved." } : { ok: false, text: res.error });
     })
   );
-  const input =
-    "mt-1 w-full rounded-lg border border-ink/15 bg-cream/40 px-3 py-2 text-sm outline-none focus:border-forest/50";
 
   return (
-    <form onSubmit={onSubmit} className="mt-3 space-y-3 text-sm">
-      <label className="block">
-        <span className="text-ink/50">Courier</span>
-        <input name="courier" defaultValue={courier ?? ""} placeholder="e.g. Delhivery" className={input} />
-      </label>
-      <label className="block">
-        <span className="text-ink/50">Tracking number</span>
-        <input name="trackingNumber" defaultValue={trackingNumber ?? ""} className={input} />
-      </label>
-      <label className="block">
-        <span className="text-ink/50">Tracking link (optional)</span>
-        <input name="trackingUrl" defaultValue={trackingUrl ?? ""} placeholder="https://" className={input} />
-      </label>
-      <label className="block">
-        <span className="text-ink/50">Internal note (not shown to customer)</span>
-        <textarea name="adminNote" rows={2} defaultValue={adminNote ?? ""} className={input} />
-      </label>
+    <form onSubmit={onSubmit} className="mt-4 space-y-4 text-sm">
+      <AdminInput label="Courier" name="courier" defaultValue={courier ?? ""} placeholder="e.g. Delhivery" />
+      <AdminInput label="Tracking number" name="trackingNumber" defaultValue={trackingNumber ?? ""} />
+      <AdminInput label="Tracking link (optional)" name="trackingUrl" defaultValue={trackingUrl ?? ""} placeholder="https://" />
+      <AdminInput label="Internal note (not shown to customer)" name="adminNote" defaultValue={adminNote ?? ""} multiline minRows={2} />
       <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-full bg-forest px-5 py-2 text-xs uppercase tracking-[0.14em] text-cream disabled:opacity-50"
-        >
-          {pending ? "Saving..." : "Save"}
-        </button>
-        {message ? (
-          <span role={message.ok ? "status" : "alert"} className={message.ok ? "text-forest" : "text-terracotta"}>
-            {message.text}
-          </span>
-        ) : null}
+        <SubmitButton pending={pending} pendingText="Saving..." size="small">
+          Save
+        </SubmitButton>
+        {message ? <FormAlert severity={message.ok ? "success" : "error"}>{message.text}</FormAlert> : null}
       </div>
     </form>
   );

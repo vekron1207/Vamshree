@@ -6,11 +6,13 @@ import { useActionState } from "react";
 import InputAdornment from "@mui/material/InputAdornment";
 import { signupAction, type AuthState } from "../auth-actions";
 import { FormAlert, SubmitButton, TextInput } from "@/components/ui/fields";
+import { useSamplePhone } from "@/lib/use-sample-phone";
 
 export function SignupForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(signupAction, {});
   const onSubmit = useSubmit(action);
   const e = state.fieldErrors ?? {};
+  const samplePhone = useSamplePhone();
 
   return (
     <form onSubmit={onSubmit} className="mt-10 space-y-6" noValidate>
@@ -22,7 +24,7 @@ export function SignupForm({ next }: { next: string }) {
         name="phone"
         type="tel"
         required
-        placeholder="98765 43210"
+        placeholder={samplePhone}
         error={e.phone}
         hint="10-digit Indian number. We use it for delivery updates."
         htmlInput={{ autoComplete: "tel-national", inputMode: "numeric" }}

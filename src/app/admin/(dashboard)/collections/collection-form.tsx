@@ -1,15 +1,15 @@
 "use client";
 
 import { useSubmit } from "@/lib/use-submit";
-import Link from "next/link";
 import { useActionState, useState, useSyncExternalStore, type ReactNode } from "react";
+import Chip from "@mui/material/Chip";
+import { AdminInput, FormAlert, SubmitButton, SwitchRow } from "@/components/ui/fields";
+import { LinkButton } from "@/components/ui/link-button";
 import { formatINR } from "@/lib/format";
 import { activeSalePercent, applyDiscount } from "@/lib/pricing";
 import { ImageUploader } from "../image-uploader";
 import type { CollectionFormState } from "./actions";
 
-const inputClass =
-  "w-full rounded-lg border border-ink/12 bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-ink/30 focus:border-forest/60 focus:ring-2 focus:ring-forest/10";
 const card = "rounded-2xl bg-paper p-5 shadow-[0_1px_2px_rgba(18,20,15,0.06)] sm:p-6";
 
 export type CollectionInitial = {
@@ -53,16 +53,17 @@ function DateTimeField({
   // remount with the real value once hydrated.
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
   return (
-    <Field label={label}>
+    <>
       <input type="hidden" name={name} value={value ?? ""} />
-      <input
+      <AdminInput
         key={mounted ? "client" : "server"}
+        label={label}
         type="datetime-local"
         defaultValue={mounted ? toLocalInput(value) : ""}
         onChange={(e) => onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
-        className={inputClass}
+        slotProps={{ inputLabel: { shrink: true } }}
       />
-    </Field>
+    </>
   );
 }
 
@@ -97,35 +98,24 @@ export function CollectionForm({
   };
   const now = new Date();
   const liveNow = activeSalePercent(sale, now) > 0;
-  const status = !saleEnabled
-    ? { text: "Off", tone: "bg-ink/5 text-ink/60 ring-ink/10" }
+  const status: { text: string; color: "default" | "error" | "success" | "info" | "warning" } = !saleEnabled
+    ? { text: "Off", color: "default" }
     : percent < 1 || percent > 90
-      ? { text: "Discount must be 1-90%", tone: "bg-rose-50 text-rose-800 ring-rose-200" }
+      ? { text: "Discount must be 1-90%", color: "error" }
       : liveNow
-        ? { text: "Live now", tone: "bg-emerald-50 text-emerald-800 ring-emerald-200" }
+        ? { text: "Live now", color: "success" }
         : sale.saleStartsAt && now < sale.saleStartsAt
-          ? { text: "Scheduled", tone: "bg-sky-50 text-sky-800 ring-sky-200" }
-          : { text: "Ended", tone: "bg-amber-50 text-amber-800 ring-amber-200" };
+          ? { text: "Scheduled", color: "info" }
+          : { text: "Ended", color: "warning" };
 
   return (
     <form onSubmit={onSubmit} className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
       <div className="space-y-6">
         <section className={card}>
           <div className="space-y-5">
-            <Field label="Name">
-              <input name="name" defaultValue={initial?.name} required className={inputClass} />
-            </Field>
-            <Field label="Tagline" hint="One short line shown under the name, e.g. Inspired by moonlit evenings.">
-              <input name="tagline" defaultValue={initial?.tagline ?? ""} maxLength={120} className={inputClass} />
-            </Field>
-            <Field label="Story">
-              <textarea
-                name="description"
-                defaultValue={initial?.description ?? ""}
-                rows={6}
-                className={`${inputClass} leading-relaxed`}
-              />
-            </Field>
+            <AdminInput label="Name" name="name" defaultValue={initial?.name} required />
+            <AdminInput label="Tagline" name="tagline" defaultValue={initial?.tagline ?? ""} hint="One short line shown under the name, e.g. Inspired by moonlit evenings." htmlInput={{ maxLength: 120 }} />
+            <AdminInput label="Story" name="description" defaultValue={initial?.description ?? ""} multiline minRows={6} />
           </div>
         </section>
 
@@ -147,20 +137,15 @@ export function CollectionForm({
         <section className={card}>
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-medium text-ink">Collection sale</h2>
-            <span className={`rounded-full px-2.5 py-0.5 text-xs ring-1 ring-inset ${status.tone}`}>
-              {status.text}
-            </span>
+            <Chip size="small" label={status.text} color={status.color} variant="outlined" sx={{ height: 26, textTransform: "none", letterSpacing: 0 }} />
           </div>
           <p className="mt-1 text-xs leading-relaxed text-ink/50">
             Discounts every product in this collection only. Other collections keep their normal prices.
           </p>
 
-          <Toggle
-            name="saleEnabled"
-            checked={saleEnabled}
-            onChange={setSaleEnabled}
-            label="Run a sale on this collection"
-          />
+          <div className="mt-4">
+            <SwitchRow name="saleEnabled" checked={saleEnabled} onChange={setSaleEnabled} label="Run a sale on this collection" />
+          </div>
 
           {/* inert rather than disabled: disabled fields aren't submitted, which
               would erase a saved schedule just by switching the sale off */}
@@ -169,28 +154,8 @@ export function CollectionForm({
             className={`mt-4 space-y-4 transition-opacity ${saleEnabled ? "" : "opacity-40"}`}
           >
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Discount %">
-                <input
-                  name="salePercent"
-                  type="number"
-                  min={1}
-                  max={90}
-                  step={1}
-                  value={percent}
-                  onChange={(e) => setPercent(Number(e.target.value))}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Badge text">
-                <input
-                  name="saleLabel"
-                  value={label}
-                  onChange={(e) => setLabel(e.target.value)}
-                  placeholder={`${percent}% off`}
-                  maxLength={40}
-                  className={inputClass}
-                />
-              </Field>
+              <AdminInput label="Discount %" name="salePercent" type="number" value={percent} onChange={(e) => setPercent(Number(e.target.value))} htmlInput={{ min: 1, max: 90, step: 1 }} />
+              <AdminInput label="Badge text" name="saleLabel" value={label} onChange={(e) => setLabel(e.target.value)} placeholder={`${percent}% off`} htmlInput={{ maxLength: 40 }} />
             </div>
             <DateTimeField name="saleStartsAt" label="Starts (optional)" value={startsAt} onChange={setStartsAt} />
             <DateTimeField name="saleEndsAt" label="Ends (optional)" value={endsAt} onChange={setEndsAt} />
@@ -213,88 +178,26 @@ export function CollectionForm({
         <section className={card}>
           <h2 className="font-medium text-ink">Display</h2>
           <div className="mt-4 space-y-4">
-            <Toggle
-              name="isVisible"
-              checked={undefined}
-              defaultChecked={initial?.isVisible ?? true}
-              label="Show on storefront"
-            />
+            <SwitchRow name="isVisible" defaultChecked={initial?.isVisible ?? true} label="Show on storefront" />
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Order" hint="Lower shows first.">
-                <input
-                  name="sortOrder"
-                  type="number"
-                  step={1}
-                  defaultValue={initial?.sortOrder ?? 0}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="URL slug" hint="Blank = from name.">
-                <input name="slug" defaultValue={initial?.slug} className={inputClass} />
-              </Field>
+              <AdminInput label="Order" name="sortOrder" type="number" defaultValue={initial?.sortOrder ?? 0} hint="Lower shows first." htmlInput={{ step: 1 }} />
+              <AdminInput label="URL slug" name="slug" defaultValue={initial?.slug} hint="Blank = from name." />
             </div>
           </div>
         </section>
 
-        {state.error ? (
-          <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-            {state.error}
-          </p>
-        ) : null}
+        <FormAlert>{state.error}</FormAlert>
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={pending}
-            className="flex-1 rounded-full bg-forest px-6 py-3 text-sm text-cream transition-colors hover:bg-forest-deep disabled:opacity-50"
-          >
-            {pending ? "Saving..." : "Save collection"}
-          </button>
-          <Link href="/admin/collections" className="rounded-full px-5 py-3 text-sm text-ink/60 hover:text-ink">
+        <div className="flex items-center gap-3">
+          <SubmitButton pending={pending} pendingText="Saving..." size="large" sx={{ flex: 1 }}>
+            Save collection
+          </SubmitButton>
+          <LinkButton href="/admin/collections" variant="text" color="inherit">
             Cancel
-          </Link>
+          </LinkButton>
         </div>
         {deleteSlot}
       </div>
     </form>
-  );
-}
-
-function Toggle({
-  name,
-  label,
-  checked,
-  defaultChecked,
-  onChange,
-}: {
-  name: string;
-  label: string;
-  checked?: boolean;
-  defaultChecked?: boolean;
-  onChange?: (value: boolean) => void;
-}) {
-  return (
-    <label className="mt-4 flex cursor-pointer items-center justify-between gap-4 text-sm text-ink">
-      {label}
-      <input
-        type="checkbox"
-        name={name}
-        className="peer sr-only"
-        {...(checked !== undefined
-          ? { checked, onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange?.(e.target.checked) }
-          : { defaultChecked })}
-      />
-      <span className="relative h-6 w-11 shrink-0 rounded-full bg-ink/15 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-paper after:shadow after:transition-transform peer-checked:bg-forest peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold" />
-    </label>
-  );
-}
-
-function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-medium uppercase tracking-[0.08em] text-ink/55">{label}</span>
-      {children}
-      {hint ? <span className="mt-1.5 block text-xs leading-relaxed text-ink/45">{hint}</span> : null}
-    </label>
   );
 }

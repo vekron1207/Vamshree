@@ -1,5 +1,10 @@
 "use client";
 
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/CloseRounded";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightIcon from "@mui/icons-material/ChevronRightRounded";
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 export type LightboxImage = { url: string; alt: string };
@@ -219,7 +224,7 @@ export function ImageLightbox({
   const current = images[index];
   const zoomed = view.scale > 1.01;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -238,15 +243,9 @@ export function ImageLightbox({
           <ToolButton label="Zoom in" onClick={() => zoomBy(1.5)} disabled={view.scale >= MAX}>
             +
           </ToolButton>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="ml-3 flex h-10 w-10 items-center justify-center rounded-full text-xl transition-colors hover:bg-cream/10"
-          >
-            &#10005;
-          </button>
+          <IconButton ref={closeRef} onClick={onClose} aria-label="Close" sx={{ ml: 1.5, color: "inherit" }}>
+            <CloseIcon />
+          </IconButton>
         </div>
       </div>
 
@@ -308,7 +307,8 @@ export function ImageLightbox({
           ))}
         </div>
       ) : null}
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -324,30 +324,32 @@ function ToolButton({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={onClick}
-      disabled={disabled}
-      className="flex h-10 w-10 items-center justify-center rounded-full text-xl transition-colors hover:bg-cream/10 disabled:opacity-30"
-    >
+    <IconButton aria-label={label} onClick={onClick} disabled={disabled} sx={{ color: "inherit", fontSize: 22, "&.Mui-disabled": { color: "inherit", opacity: 0.3 } }}>
       {children}
-    </button>
+    </IconButton>
   );
 }
 
 function NavButton({ side, label, onClick }: { side: "left" | "right"; label: string; onClick: () => void }) {
   return (
-    <button
-      type="button"
+    <IconButton
       aria-label={label}
       onPointerDown={(e) => e.stopPropagation()}
       onClick={onClick}
-      className={`absolute top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-forest-deep/60 text-2xl text-cream transition-colors hover:bg-forest-deep sm:flex ${
-        side === "left" ? "left-4" : "right-4"
-      }`}
+      sx={{
+        position: "absolute",
+        top: "50%",
+        transform: "translateY(-50%)",
+        display: { xs: "none", sm: "inline-flex" },
+        [side]: 16,
+        width: 48,
+        height: 48,
+        color: "#fff",
+        backgroundColor: "rgba(6,20,12,0.6)",
+        "&:hover": { backgroundColor: "rgba(6,20,12,0.9)" },
+      }}
     >
-      {side === "left" ? "‹" : "›"}
-    </button>
+      {side === "left" ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+    </IconButton>
   );
 }

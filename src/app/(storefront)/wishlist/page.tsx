@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { LinkButton } from "@/components/ui/link-button";
+
 import { useEffect, useState } from "react";
 import { useWishlist } from "@/lib/wishlist-context";
 import { ProductCard, type ProductCardData } from "@/components/product-card";
@@ -37,12 +38,9 @@ export default function WishlistPage() {
       ) : shown.length === 0 ? (
         <div className="mx-auto mt-16 max-w-sm text-center">
           <p className="font-tagline text-xl italic text-ink/70">Nothing saved yet. Tap the heart on any piece you love.</p>
-          <Link
-            href="/products"
-            className="mt-8 inline-block rounded-full bg-forest px-9 py-3.5 text-[12px] uppercase tracking-[0.18em] text-cream hover:bg-forest-deep"
-          >
+          <LinkButton href="/products" variant="contained" size="large" sx={{ mt: 4 }}>
             Shop jewellery
-          </Link>
+          </LinkButton>
         </div>
       ) : (
         <div className="mt-14 grid grid-cols-2 gap-x-5 gap-y-14 sm:grid-cols-3 lg:grid-cols-4">

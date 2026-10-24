@@ -25,7 +25,7 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
   if (name.length > 80) fieldErrors.name = "Keep your name under 80 characters.";
   if (!looksLikeEmail(email)) fieldErrors.email = "Enter a valid email address.";
   const phone = normalizeIndianPhone(phoneRaw);
-  if (!phone) fieldErrors.phone = "Enter a 10-digit Indian mobile number, e.g. 98765 43210.";
+  if (!phone) fieldErrors.phone = "Enter a 10-digit Indian mobile number, e.g. 9XXXX XXXXX.";
   const pwProblem = passwordProblem(password);
   if (pwProblem) fieldErrors.password = pwProblem;
   else if (password !== confirm) fieldErrors.confirm = "The passwords don't match.";

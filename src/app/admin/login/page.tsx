@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useActionState } from "react";
 import { loginAction, type LoginState } from "./actions";
 import { BrandMark } from "@/components/brand";
+import { AdminInput, FormAlert, SubmitButton } from "@/components/ui/fields";
 import { useSubmit } from "@/lib/use-submit";
 
 const initialState: LoginState = {};
@@ -36,42 +37,12 @@ export default function AdminLoginPage() {
           <p className="mt-2 text-sm text-ink/60">Manage products, stock and orders.</p>
 
           <form onSubmit={onSubmit} className="mt-10 space-y-5">
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium uppercase tracking-[0.08em] text-ink/55">
-                Email
-              </span>
-              <input
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-                className="w-full rounded-lg border border-ink/12 bg-paper px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-forest/60 focus:ring-2 focus:ring-forest/10"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium uppercase tracking-[0.08em] text-ink/55">
-                Password
-              </span>
-              <input
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-                className="w-full rounded-lg border border-ink/12 bg-paper px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-forest/60 focus:ring-2 focus:ring-forest/10"
-              />
-            </label>
-            {state.error ? (
-              <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-                {state.error}
-              </p>
-            ) : null}
-            <button
-              type="submit"
-              disabled={pending}
-              className="w-full rounded-full bg-forest px-6 py-3 text-sm text-cream transition-colors hover:bg-forest-deep disabled:opacity-50"
-            >
-              {pending ? "Signing in..." : "Sign in"}
-            </button>
+            <AdminInput label="Email" name="email" type="email" required htmlInput={{ autoComplete: "email" }} />
+            <AdminInput label="Password" name="password" type="password" required htmlInput={{ autoComplete: "current-password" }} />
+            <FormAlert>{state.error}</FormAlert>
+            <SubmitButton pending={pending} pendingText="Signing in..." size="large" fullWidth>
+              Sign in
+            </SubmitButton>
           </form>
         </div>
       </div>

@@ -2,7 +2,24 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
+import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
+import Chip from "@mui/material/Chip";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Grow from "@mui/material/Grow";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import MenuItem from "@mui/material/MenuItem";
+import Paper from "@mui/material/Paper";
+import Slide from "@mui/material/Slide";
+import Snackbar from "@mui/material/Snackbar";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
+import TextField from "@mui/material/TextField";
+import CloseIcon from "@mui/icons-material/CloseRounded";
+import SearchIcon from "@mui/icons-material/SearchRounded";
+import { AdminInput, AdminSelect, FormAlert, SubmitButton } from "@/components/ui/fields";
 import { formatINR } from "@/lib/format";
 import { bulkSetProductDiscount, bulkSetProductPrice, bulkSetProductsActive } from "./actions";
 
@@ -26,8 +43,7 @@ type StockFilter = "all" | "in" | "low" | "out";
 type DiscountFilter = "all" | "on" | "off";
 type SortKey = "newest" | "name" | "price-asc" | "price-desc" | "stock-asc" | "stock-desc";
 
-const selectClass =
-  "rounded-full border border-ink/10 bg-paper px-3.5 py-2 text-sm text-ink outline-none transition-colors focus:border-forest/50";
+const filterSx = { minWidth: 150, width: "auto", "& .MuiOutlinedInput-root": { borderRadius: 999 } } as const;
 
 export function ProductTable({
   products,
@@ -61,7 +77,6 @@ export function ProductTable({
   if (selected.size === 0 && priceOpen) setPriceOpen(false);
   if (selected.size === 0 && discOpen) setDiscOpen(false);
   const [pending, startTransition] = useTransition();
-  const selectAllRef = useRef<HTMLInputElement>(null);
 
   const counts = useMemo(
     () => ({
@@ -118,16 +133,6 @@ export function ProductTable({
   const visibleSelected = visible.filter((p) => selected.has(p.id));
   const allVisibleSelected = visible.length > 0 && visibleSelected.length === visible.length;
   const someVisibleSelected = visibleSelected.length > 0 && !allVisibleSelected;
-
-  useEffect(() => {
-    if (selectAllRef.current) selectAllRef.current.indeterminate = someVisibleSelected;
-  }, [someVisibleSelected]);
-
-  useEffect(() => {
-    if (!notice) return;
-    const t = window.setTimeout(() => setNotice(null), 5000);
-    return () => window.clearTimeout(t);
-  }, [notice]);
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -221,81 +226,92 @@ export function ProductTable({
   const unpricedSelected = selectedProducts.filter((p) => !p.isActive && p.price <= 0).length;
   const canUnarchive = unarchivable > 0;
 
+  const barButton = { color: "#fff", "&:hover": { backgroundColor: "rgba(255,255,255,0.12)", transform: "none" }, "&.Mui-disabled": { color: "rgba(255,255,255,0.35)" } } as const;
+
   return (
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-1 rounded-full bg-paper p-1 shadow-[0_1px_2px_rgba(18,20,15,0.06)]" role="tablist">
+        <Tabs
+          value={status}
+          onChange={(_, v: StatusFilter) => setStatus(v)}
+          aria-label="Product status"
+          sx={{ minHeight: 44, "& .MuiTabs-indicator": { backgroundColor: "#c9a355", height: 3, borderRadius: 3 } }}
+        >
           {(["all", "live", "archived"] as const).map((s) => (
-            <button
+            <Tab
               key={s}
-              type="button"
-              role="tab"
-              aria-selected={status === s}
-              onClick={() => setStatus(s)}
-              className={`rounded-full px-4 py-1.5 text-sm capitalize transition-colors ${
-                status === s ? "bg-forest text-cream" : "text-ink/60 hover:text-ink"
-              }`}
-            >
-              {s} <span className={status === s ? "text-cream/60" : "text-ink/40"}>{counts[s]}</span>
-            </button>
+              value={s}
+              label={
+                <span>
+                  {s} <span className="text-ink/40">{counts[s]}</span>
+                </span>
+              }
+              sx={{ textTransform: "capitalize", letterSpacing: "0.04em", fontSize: 14 }}
+            />
           ))}
-        </div>
-        <label className="relative block sm:w-72">
-          <span className="sr-only">Search products</span>
-          <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden>
-            <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.5" />
-            <path d="m13.5 13.5 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name, category, collection"
-            className="w-full rounded-full border border-ink/10 bg-paper py-2 pl-10 pr-4 text-sm outline-none transition-colors focus:border-forest/50"
-          />
-        </label>
+        </Tabs>
+        <TextField
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search name, category, collection"
+          variant="outlined"
+          size="small"
+          hiddenLabel
+          sx={{ maxWidth: { sm: 300 }, "& .MuiOutlinedInput-root": { borderRadius: 999 } }}
+          slotProps={{
+            htmlInput: { "aria-label": "Search products" },
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter products">
-        <select aria-label="Category" value={category} onChange={(e) => setCategory(e.target.value)} className={selectClass}>
-          <option value="">All categories</option>
+        <AdminSelect label="Category" value={category} onChange={(e) => setCategory(e.target.value)} sx={filterSx}>
+          <MenuItem value="">All categories</MenuItem>
           {categories.map((c) => (
-            <option key={c} value={c}>
+            <MenuItem key={c} value={c}>
               {c}
-            </option>
+            </MenuItem>
           ))}
-        </select>
-        <select aria-label="Collection" value={collection} onChange={(e) => setCollection(e.target.value)} className={selectClass}>
-          <option value="">All collections</option>
+        </AdminSelect>
+        <AdminSelect label="Collection" value={collection} onChange={(e) => setCollection(e.target.value)} sx={filterSx}>
+          <MenuItem value="">All collections</MenuItem>
           {collections.map((c) => (
-            <option key={c} value={c}>
+            <MenuItem key={c} value={c}>
               {c}
-            </option>
+            </MenuItem>
           ))}
-        </select>
-        <select aria-label="Stock" value={stockFilter} onChange={(e) => setStockFilter(e.target.value as StockFilter)} className={selectClass}>
-          <option value="all">Any stock</option>
-          <option value="in">In stock</option>
-          <option value="low">Low stock</option>
-          <option value="out">Sold out</option>
-        </select>
-        <select aria-label="Discount" value={discountFilter} onChange={(e) => setDiscountFilter(e.target.value as DiscountFilter)} className={selectClass}>
-          <option value="all">Any discount</option>
-          <option value="on">With a discount</option>
-          <option value="off">No discount</option>
-        </select>
-        <select aria-label="Sort" value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={selectClass}>
-          <option value="newest">Newest first</option>
-          <option value="name">Name A to Z</option>
-          <option value="price-asc">Price: low to high</option>
-          <option value="price-desc">Price: high to low</option>
-          <option value="stock-asc">Stock: low to high</option>
-          <option value="stock-desc">Stock: high to low</option>
-        </select>
+        </AdminSelect>
+        <AdminSelect label="Stock" value={stockFilter} onChange={(e) => setStockFilter(e.target.value as StockFilter)} sx={filterSx}>
+          <MenuItem value="all">Any stock</MenuItem>
+          <MenuItem value="in">In stock</MenuItem>
+          <MenuItem value="low">Low stock</MenuItem>
+          <MenuItem value="out">Sold out</MenuItem>
+        </AdminSelect>
+        <AdminSelect label="Discount" value={discountFilter} onChange={(e) => setDiscountFilter(e.target.value as DiscountFilter)} sx={filterSx}>
+          <MenuItem value="all">Any discount</MenuItem>
+          <MenuItem value="on">With a discount</MenuItem>
+          <MenuItem value="off">No discount</MenuItem>
+        </AdminSelect>
+        <AdminSelect label="Sort" value={sort} onChange={(e) => setSort(e.target.value as SortKey)} sx={filterSx}>
+          <MenuItem value="newest">Newest first</MenuItem>
+          <MenuItem value="name">Name A to Z</MenuItem>
+          <MenuItem value="price-asc">Price: low to high</MenuItem>
+          <MenuItem value="price-desc">Price: high to low</MenuItem>
+          <MenuItem value="stock-asc">Stock: low to high</MenuItem>
+          <MenuItem value="stock-desc">Stock: high to low</MenuItem>
+        </AdminSelect>
         {filtersActive ? (
-          <button type="button" onClick={clearFilters} className="px-2 text-sm text-forest hover:underline">
+          <Button size="small" variant="text" onClick={clearFilters}>
             Clear filters
-          </button>
+          </Button>
         ) : null}
         <span className="ml-auto text-sm text-ink/50" aria-live="polite">
           {visible.length} of {products.length}
@@ -307,14 +323,13 @@ export function ProductTable({
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-ink/[0.06] text-xs uppercase tracking-[0.08em] text-ink/50">
               <tr>
-                <th className="w-12 py-3 pl-5">
-                  <input
-                    ref={selectAllRef}
-                    type="checkbox"
-                    aria-label="Select all shown products"
+                <th className="w-12 py-1 pl-3">
+                  <Checkbox
+                    size="small"
+                    slotProps={{ input: { "aria-label": "Select all shown products" } }}
                     checked={allVisibleSelected}
+                    indeterminate={someVisibleSelected}
                     onChange={toggleAllVisible}
-                    className="h-4 w-4 accent-forest"
                   />
                 </th>
                 <th className="py-3 font-normal">Product</th>
@@ -335,16 +350,10 @@ export function ProductTable({
                       if ((e.target as HTMLElement).closest("a,button,input")) return;
                       toggle(p.id);
                     }}
-                    className={`cursor-pointer transition-colors ${isSel ? "bg-gold-soft/25" : "hover:bg-cream/50"}`}
+                    className={`cursor-pointer transition-colors duration-300 ${isSel ? "bg-gold-soft/25" : "hover:bg-cream/50"}`}
                   >
-                    <td className="py-3 pl-5">
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${p.name}`}
-                        checked={isSel}
-                        onChange={() => toggle(p.id)}
-                        className="h-4 w-4 accent-forest"
-                      />
+                    <td className="py-1 pl-3">
+                      <Checkbox size="small" slotProps={{ input: { "aria-label": `Select ${p.name}` } }} checked={isSel} onChange={() => toggle(p.id)} />
                     </td>
                     <td className="py-3">
                       <div className="flex items-center gap-3">
@@ -366,23 +375,27 @@ export function ProductTable({
                         <>
                           {formatINR(p.price)}{" "}
                           {p.discountPercent ? (
-                            <span
+                            <Chip
+                              size="small"
+                              label={`${p.discountPercent}% off`}
                               title={p.discountActive ? "Discount running now" : "Discount scheduled or ended"}
-                              className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ring-1 ring-inset ${
-                                p.discountActive ? "bg-terracotta/10 text-terracotta ring-terracotta/30" : "bg-ink/5 text-ink/50 ring-ink/10"
-                              }`}
-                            >
-                              {p.discountPercent}% off
-                            </span>
+                              color={p.discountActive ? "error" : "default"}
+                              variant="outlined"
+                              sx={{ ml: 1, height: 22, fontSize: 11, textTransform: "none", letterSpacing: 0 }}
+                            />
                           ) : null}
                         </>
                       ) : (
-                        <Link
+                        <Chip
+                          component={Link}
                           href={`/admin/products/${p.id}`}
-                          className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs text-amber-800 ring-1 ring-inset ring-amber-200 hover:bg-amber-100"
-                        >
-                          Set price
-                        </Link>
+                          clickable
+                          size="small"
+                          color="warning"
+                          variant="outlined"
+                          label="Set price"
+                          sx={{ height: 24, fontSize: 12, textTransform: "none", letterSpacing: 0 }}
+                        />
                       )}
                     </td>
                     <td className={`py-3 text-right tabular-nums ${p.stock === 0 ? "text-rose-700" : p.stock <= lowStockThreshold ? "text-amber-700" : ""}`}>
@@ -390,20 +403,18 @@ export function ProductTable({
                       {p.stock > 0 && p.stock <= lowStockThreshold ? <span className="ml-1.5 text-[10px] uppercase">low</span> : null}
                     </td>
                     <td className="py-3 pl-6">
-                      {p.isActive ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs text-emerald-800 ring-1 ring-inset ring-emerald-200">
-                          <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden /> Live
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-ink/5 px-2.5 py-0.5 text-xs text-ink/60 ring-1 ring-inset ring-ink/10">
-                          <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden /> Archived
-                        </span>
-                      )}
+                      <Chip
+                        size="small"
+                        label={p.isActive ? "Live" : "Archived"}
+                        color={p.isActive ? "success" : "default"}
+                        variant="outlined"
+                        sx={{ height: 24, fontSize: 12, textTransform: "none", letterSpacing: 0 }}
+                      />
                     </td>
                     <td className="py-3 pr-5 text-right">
-                      <Link href={`/admin/products/${p.id}`} className="text-forest hover:underline">
+                      <Button component={Link} href={`/admin/products/${p.id}`} size="small" variant="text">
                         Edit
-                      </Link>
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -419,14 +430,17 @@ export function ProductTable({
       </div>
 
       {/* Set-price panel, sits just above the bulk bar */}
-      {selected.size > 0 && priceOpen ? (
+      <Grow in={selected.size > 0 && priceOpen} unmountOnExit>
         <div className="pointer-events-none fixed inset-x-0 bottom-24 z-30 flex justify-center px-4">
-          <form
-            onSubmit={(e) => {
+          <Paper
+            component="form"
+            elevation={12}
+            onSubmit={(e: React.FormEvent) => {
               e.preventDefault();
               applyPrice();
             }}
-            className="animate-rise-in pointer-events-auto w-full max-w-sm rounded-2xl bg-paper p-5 shadow-2xl ring-1 ring-ink/10"
+            className="pointer-events-auto w-full max-w-sm"
+            sx={{ p: 2.5 }}
           >
             <p className="font-medium text-ink">
               Set one price for {selected.size} {selected.size === 1 ? "product" : "products"}
@@ -436,186 +450,140 @@ export function ProductTable({
                 ? `Currently ${distinctPrices[0] > 0 ? formatINR(distinctPrices[0]) : "unpriced"}.`
                 : `Currently ${distinctPrices.length} different prices. They'll all become the same.`}
             </p>
-            <label className="mt-4 block">
-              <span className="sr-only">Price in rupees</span>
-              <span className="flex items-center rounded-lg border border-ink/15 bg-paper px-3.5 focus-within:border-forest/60 focus-within:ring-2 focus-within:ring-forest/10">
-                <span className="text-ink/50">&#8377;</span>
-                <input
-                  autoFocus
-                  inputMode="decimal"
-                  value={priceDraft}
-                  onChange={(e) => setPriceDraft(e.target.value)}
-                  placeholder="e.g. 2499"
-                  className="w-full bg-transparent px-2 py-2.5 text-ink outline-none"
-                />
-              </span>
-            </label>
-            <label className="mt-3 flex items-center gap-2.5 text-sm text-ink">
-              <input
-                type="checkbox"
-                checked={priceLive}
-                onChange={(e) => setPriceLive(e.target.checked)}
-                className="h-4 w-4 accent-forest"
+            <div className="mt-4">
+              <AdminInput
+                autoFocus
+                label="Price in rupees"
+                value={priceDraft}
+                onChange={(e) => setPriceDraft(e.target.value)}
+                placeholder="e.g. 2499"
+                htmlInput={{ inputMode: "decimal" }}
+                slotProps={{ input: { startAdornment: <InputAdornment position="start">&#8377;</InputAdornment> } }}
               />
-              Also put them live on the storefront
-            </label>
-            {priceError ? (
-              <p role="alert" className="mt-3 text-sm text-rose-700">
-                {priceError}
-              </p>
-            ) : null}
-            <div className="mt-4 flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={pending}
-                className="flex-1 rounded-full bg-forest px-5 py-2.5 text-sm text-cream transition-colors hover:bg-forest-deep disabled:opacity-50"
-              >
-                {pending ? "Saving..." : `Apply to ${selected.size}`}
-              </button>
-              <button type="button" onClick={() => setPriceOpen(false)} className="text-sm text-ink/55 hover:text-ink">
-                Cancel
-              </button>
             </div>
-          </form>
+            <FormControlLabel
+              sx={{ mt: 1 }}
+              control={<Checkbox checked={priceLive} onChange={(e) => setPriceLive(e.target.checked)} />}
+              label="Also put them live on the storefront"
+            />
+            <div className="mt-2">
+              <FormAlert>{priceError}</FormAlert>
+            </div>
+            <div className="mt-4 flex items-center gap-3">
+              <SubmitButton pending={pending} pendingText="Saving..." size="small" sx={{ flex: 1 }}>
+                {`Apply to ${selected.size}`}
+              </SubmitButton>
+              <Button type="button" variant="text" color="inherit" size="small" onClick={() => setPriceOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </Paper>
         </div>
-      ) : null}
+      </Grow>
 
       {/* Set-discount panel */}
-      {selected.size > 0 && discOpen ? (
+      <Grow in={selected.size > 0 && discOpen} unmountOnExit>
         <div className="pointer-events-none fixed inset-x-0 bottom-24 z-30 flex justify-center px-4">
-          <form
-            onSubmit={(e) => {
+          <Paper
+            component="form"
+            elevation={12}
+            onSubmit={(e: React.FormEvent) => {
               e.preventDefault();
               applyDiscount(false);
             }}
-            className="animate-rise-in pointer-events-auto w-full max-w-sm rounded-2xl bg-paper p-5 shadow-2xl ring-1 ring-ink/10"
+            className="pointer-events-auto w-full max-w-sm"
+            sx={{ p: 2.5 }}
           >
             <p className="font-medium text-ink">
               Discount for {selected.size} {selected.size === 1 ? "product" : "products"}
             </p>
             <p className="mt-1 text-xs text-ink/50">A percentage off each product&rsquo;s price. Dates are optional.</p>
-            <label className="mt-4 block">
-              <span className="mb-1 block text-xs uppercase tracking-[0.08em] text-ink/55">Percent off</span>
-              <input
-                autoFocus
-                inputMode="numeric"
-                value={discPercent}
-                onChange={(e) => setDiscPercent(e.target.value)}
-                placeholder="e.g. 10"
-                className="w-full rounded-lg border border-ink/15 bg-paper px-3.5 py-2.5 text-ink outline-none focus:border-forest/60 focus:ring-2 focus:ring-forest/10"
-              />
-            </label>
+            <div className="mt-4">
+              <AdminInput autoFocus label="Percent off" value={discPercent} onChange={(e) => setDiscPercent(e.target.value)} placeholder="e.g. 10" htmlInput={{ inputMode: "numeric" }} />
+            </div>
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <label className="block">
-                <span className="mb-1 block text-xs uppercase tracking-[0.08em] text-ink/55">Starts</span>
-                <input type="date" value={discStart} onChange={(e) => setDiscStart(e.target.value)} className="w-full rounded-lg border border-ink/15 bg-paper px-3 py-2 text-sm outline-none focus:border-forest/60" />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs uppercase tracking-[0.08em] text-ink/55">Ends</span>
-                <input type="date" value={discEnd} onChange={(e) => setDiscEnd(e.target.value)} className="w-full rounded-lg border border-ink/15 bg-paper px-3 py-2 text-sm outline-none focus:border-forest/60" />
-              </label>
+              <AdminInput label="Starts" type="date" value={discStart} onChange={(e) => setDiscStart(e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
+              <AdminInput label="Ends" type="date" value={discEnd} onChange={(e) => setDiscEnd(e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
             </div>
-            {discError ? (
-              <p role="alert" className="mt-3 text-sm text-rose-700">
-                {discError}
-              </p>
-            ) : null}
-            <div className="mt-4 flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={pending}
-                className="flex-1 rounded-full bg-forest px-5 py-2.5 text-sm text-cream transition-colors hover:bg-forest-deep disabled:opacity-50"
-              >
-                {pending ? "Saving..." : `Apply to ${selected.size}`}
-              </button>
-              <button type="button" disabled={pending} onClick={() => applyDiscount(true)} className="text-sm text-rose-700 hover:underline disabled:opacity-50">
+            <div className="mt-3">
+              <FormAlert>{discError}</FormAlert>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <SubmitButton pending={pending} pendingText="Saving..." size="small" sx={{ flex: 1 }}>
+                {`Apply to ${selected.size}`}
+              </SubmitButton>
+              <Button type="button" variant="text" color="error" size="small" disabled={pending} onClick={() => applyDiscount(true)}>
                 Remove discount
-              </button>
-              <button type="button" onClick={() => setDiscOpen(false)} className="text-sm text-ink/55 hover:text-ink">
+              </Button>
+              <Button type="button" variant="text" color="inherit" size="small" onClick={() => setDiscOpen(false)}>
                 Cancel
-              </button>
+              </Button>
             </div>
-          </form>
+          </Paper>
         </div>
-      ) : null}
+      </Grow>
 
       {/* Bulk action bar */}
-      <div
-        className={`fixed inset-x-0 bottom-6 z-30 flex justify-center px-4 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          selected.size > 0 ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"
-        }`}
-      >
-        <div className="flex flex-wrap items-center gap-2 rounded-full bg-forest-deep py-2 pl-5 pr-2 text-sm text-cream shadow-2xl">
-          <span className="mr-2 tabular-nums">
-            {selected.size} selected
-          </span>
-          <button
-            type="button"
-            aria-expanded={priceOpen}
-            onClick={() => {
-              setPriceOpen((o) => !o);
-              setDiscOpen(false);
-              setPriceError(null);
-            }}
-            className={`rounded-full px-4 py-1.5 transition-colors hover:bg-cream/10 ${priceOpen ? "bg-cream/10" : ""}`}
-          >
-            Set price
-          </button>
-          <button
-            type="button"
-            aria-expanded={discOpen}
-            onClick={() => {
-              setDiscOpen((o) => !o);
-              setPriceOpen(false);
-              setDiscError(null);
-            }}
-            className={`rounded-full px-4 py-1.5 transition-colors hover:bg-cream/10 ${discOpen ? "bg-cream/10" : ""}`}
-          >
-            Set discount
-          </button>
-          <button
-            type="button"
-            disabled={pending || !canArchive}
-            onClick={() => runBulk(false)}
-            className="rounded-full px-4 py-1.5 transition-colors hover:bg-cream/10 disabled:opacity-40"
-          >
-            Archive
-          </button>
-          <button
-            type="button"
-            disabled={pending || !canUnarchive}
-            onClick={() => runBulk(true)}
-            title={!canUnarchive && unpricedSelected > 0 ? "Set a price on these products before unarchiving" : undefined}
-            className="rounded-full bg-gold px-4 py-1.5 text-forest-deep transition-colors hover:bg-gold-soft disabled:opacity-40"
-          >
-            {pending ? "Saving..." : unpricedSelected > 0 && canUnarchive ? `Unarchive ${unarchivable}` : "Unarchive"}
-          </button>
-          {unpricedSelected > 0 ? (
-            <span className="px-2 text-xs text-gold-soft">
-              {unpricedSelected} need a price first
-            </span>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => setSelected(new Set())}
-            aria-label="Clear selection"
-            className="rounded-full px-3 py-1.5 text-cream/60 transition-colors hover:text-cream"
-          >
-            &#10005;
-          </button>
-        </div>
-      </div>
-
-      {notice ? (
-        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-30 flex justify-center px-4">
-          <div
-            role="status"
-            className="animate-rise-in rounded-full bg-paper px-5 py-2.5 text-sm text-ink shadow-lg ring-1 ring-ink/10"
-          >
-            {notice}
+      <Slide direction="up" in={selected.size > 0} mountOnEnter unmountOnExit>
+        <div className="fixed inset-x-0 bottom-6 z-30 flex justify-center px-4">
+          <div className="flex flex-wrap items-center gap-1 rounded-full bg-forest-deep py-2 pl-5 pr-2 text-sm text-cream shadow-2xl">
+            <span className="mr-2 tabular-nums">{selected.size} selected</span>
+            <Button
+              size="small"
+              variant="text"
+              aria-expanded={priceOpen}
+              onClick={() => {
+                setPriceOpen((o) => !o);
+                setDiscOpen(false);
+                setPriceError(null);
+              }}
+              sx={{ ...barButton, backgroundColor: priceOpen ? "rgba(255,255,255,0.12)" : undefined }}
+            >
+              Set price
+            </Button>
+            <Button
+              size="small"
+              variant="text"
+              aria-expanded={discOpen}
+              onClick={() => {
+                setDiscOpen((o) => !o);
+                setPriceOpen(false);
+                setDiscError(null);
+              }}
+              sx={{ ...barButton, backgroundColor: discOpen ? "rgba(255,255,255,0.12)" : undefined }}
+            >
+              Set discount
+            </Button>
+            <Button size="small" variant="text" disabled={pending || !canArchive} onClick={() => runBulk(false)} sx={barButton}>
+              Archive
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              color="secondary"
+              disabled={pending || !canUnarchive}
+              onClick={() => runBulk(true)}
+              title={!canUnarchive && unpricedSelected > 0 ? "Set a price on these products before unarchiving" : undefined}
+            >
+              {pending ? "Saving..." : unpricedSelected > 0 && canUnarchive ? `Unarchive ${unarchivable}` : "Unarchive"}
+            </Button>
+            {unpricedSelected > 0 ? <span className="px-2 text-xs text-gold-soft">{unpricedSelected} need a price first</span> : null}
+            <IconButton onClick={() => setSelected(new Set())} aria-label="Clear selection" size="small" sx={{ color: "rgba(255,255,255,0.7)" }}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
           </div>
         </div>
-      ) : null}
+      </Slide>
+
+      <Snackbar
+        open={Boolean(notice)}
+        autoHideDuration={5000}
+        onClose={() => setNotice(null)}
+        message={notice}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        slotProps={{ content: { role: "status" } }}
+        sx={{ bottom: { xs: 96 } }}
+      />
     </div>
   );
 }

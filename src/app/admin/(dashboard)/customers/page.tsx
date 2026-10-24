@@ -1,3 +1,7 @@
+import Button from "@mui/material/Button";
+import InputAdornment from "@mui/material/InputAdornment";
+import TextField from "@mui/material/TextField";
+import SearchIcon from "@mui/icons-material/SearchRounded";
 import Link from "next/link";
 import { listCustomers } from "@/lib/admin-customers";
 import { formatINR } from "@/lib/format";
@@ -26,21 +30,29 @@ export default async function AdminCustomersPage(props: PageProps<"/admin/custom
             {allCount} {allCount === 1 ? "registered customer" : "registered customers"}. Guest checkouts appear under Orders only.
           </p>
         </div>
-        <a href="/admin/export/customers" className="rounded-full border border-forest/30 px-5 py-2 text-sm text-forest hover:bg-forest hover:text-cream">
+        <Button component="a" href="/admin/export/customers" variant="outlined" size="small">
           Export CSV
-        </a>
-        <form action="/admin/customers" className="relative block w-full sm:w-80">
-          <span className="sr-only">Search customers</span>
-          <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden>
-            <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.5" />
-            <path d="m13.5 13.5 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          <input
+        </Button>
+        <form action="/admin/customers" className="w-full sm:w-80">
+          <TextField
             type="search"
             name="q"
             defaultValue={query}
             placeholder="Search name, email or mobile"
-            className="w-full rounded-full border border-ink/10 bg-paper py-2 pl-10 pr-4 text-sm outline-none transition-colors focus:border-forest/50"
+            variant="outlined"
+            size="small"
+            hiddenLabel
+            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 999 } }}
+            slotProps={{
+              htmlInput: { "aria-label": "Search customers" },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
         </form>
       </header>

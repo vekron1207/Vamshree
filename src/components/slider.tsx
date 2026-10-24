@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import IconButton from "@mui/material/IconButton";
+import ArrowBackIcon from "@mui/icons-material/ArrowBackRounded";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForwardRounded";
 
 // Swipeable row: native scroll-snap (so touch just works) plus arrow buttons
 // and optional gentle auto-advance that pauses while someone is interacting.
@@ -51,8 +54,14 @@ export function Slider({
     return () => window.clearInterval(id);
   }, [autoplayMs, step]);
 
-  const arrow =
-    "flex h-10 w-10 items-center justify-center rounded-full border border-forest/25 text-forest transition-[background-color,color,opacity] hover:bg-forest hover:text-cream disabled:pointer-events-none disabled:opacity-30";
+  const arrow = {
+    width: 42,
+    height: 42,
+    border: "1px solid rgba(14,59,34,0.25)",
+    color: "primary.main",
+    "&:hover": { backgroundColor: "primary.main", color: "#fff" },
+    "&.Mui-disabled": { opacity: 0.3 },
+  } as const;
 
   return (
     <div
@@ -68,12 +77,12 @@ export function Slider({
       onTouchEnd={() => window.setTimeout(() => (paused.current = false), 4000)}
     >
       <div className="mb-5 hidden justify-end gap-2 sm:flex">
-        <button type="button" aria-label={`Previous ${label}`} disabled={edges.start} onClick={() => step(-1)} className={arrow}>
-          &larr;
-        </button>
-        <button type="button" aria-label={`Next ${label}`} disabled={edges.end} onClick={() => step(1)} className={arrow}>
-          &rarr;
-        </button>
+        <IconButton aria-label={`Previous ${label}`} disabled={edges.start} onClick={() => step(-1)} sx={arrow}>
+          <ArrowBackIcon fontSize="small" />
+        </IconButton>
+        <IconButton aria-label={`Next ${label}`} disabled={edges.end} onClick={() => step(1)} sx={arrow}>
+          <ArrowForwardIcon fontSize="small" />
+        </IconButton>
       </div>
       <div
         ref={track}

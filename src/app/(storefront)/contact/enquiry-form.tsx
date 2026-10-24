@@ -4,11 +4,13 @@ import { useState, useTransition } from "react";
 import { useSubmit } from "@/lib/use-submit";
 import { FormAlert, SubmitButton, TextInput } from "@/components/ui/fields";
 import { submitEnquiry } from "./actions";
+import { useSamplePhone } from "@/lib/use-sample-phone";
 
 export function EnquiryForm() {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const samplePhone = useSamplePhone();
 
   const onSubmit = useSubmit((fd) =>
     startTransition(async () => {
@@ -34,7 +36,7 @@ export function EnquiryForm() {
     <form onSubmit={onSubmit} className="grid gap-6 sm:grid-cols-2">
       <TextInput label="Your name" name="name" required htmlInput={{ autoComplete: "name", maxLength: 80 }} />
       <TextInput label="Email" name="email" type="email" required htmlInput={{ autoComplete: "email", maxLength: 120 }} />
-      <TextInput label="Mobile (optional)" name="phone" type="tel" placeholder="98765 43210" htmlInput={{ inputMode: "tel", autoComplete: "tel" }} sx={{ gridColumn: { sm: "1 / -1" } }} />
+      <TextInput label="Mobile (optional)" name="phone" type="tel" placeholder={samplePhone} htmlInput={{ inputMode: "tel", autoComplete: "tel" }} sx={{ gridColumn: { sm: "1 / -1" } }} />
       <TextInput label="Your question" name="message" required multiline minRows={4} htmlInput={{ minLength: 10, maxLength: 2000 }} sx={{ gridColumn: { sm: "1 / -1" } }} />
 
       {/* Spam trap: real visitors never see or fill this */}

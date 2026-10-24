@@ -1,14 +1,15 @@
 "use client";
 
 import { useSubmit } from "@/lib/use-submit";
-import Link from "next/link";
-import { useActionState, useState, type ReactNode } from "react";
+import { useActionState, useState } from "react";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import MenuItem from "@mui/material/MenuItem";
+import { AdminInput, AdminSelect, FormAlert, SubmitButton, SwitchRow } from "@/components/ui/fields";
+import { LinkButton } from "@/components/ui/link-button";
 import type { ProductFormState } from "./actions";
 import { ImageUploader } from "../image-uploader";
 import { VariantsEditor, type VariantRow } from "./variants-editor";
-
-const inputClass =
-  "w-full rounded-lg border border-ink/12 bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-ink/30 focus:border-forest/60 focus:ring-2 focus:ring-forest/10";
 
 const card = "rounded-2xl bg-paper p-5 shadow-[0_1px_2px_rgba(18,20,15,0.06)] sm:p-6";
 
@@ -57,17 +58,15 @@ export function ProductForm({
       <div className="space-y-6">
         <section className={card}>
           <div className="space-y-5">
-            <Field label="Name">
-              <input name="name" defaultValue={initial?.name} required className={inputClass} />
-            </Field>
-            <Field label="Description" hint="Use the headings Product Description, Product Specification and Care Instructions on their own lines to get the formatted layout on the product page.">
-              <textarea
-                name="description"
-                defaultValue={initial?.description ?? ""}
-                rows={12}
-                className={`${inputClass} leading-relaxed`}
-              />
-            </Field>
+            <AdminInput label="Name" name="name" defaultValue={initial?.name} required />
+            <AdminInput
+              label="Description"
+              name="description"
+              defaultValue={initial?.description ?? ""}
+              multiline
+              minRows={10}
+              hint="Use the headings Product Description, Product Specification and Care Instructions on their own lines to get the formatted layout on the product page."
+            />
           </div>
         </section>
 
@@ -87,59 +86,20 @@ export function ProductForm({
 
       <div className="space-y-6">
         <section className={card}>
-          <label className="flex cursor-pointer items-center justify-between gap-4">
-            <span>
-              <span className="block font-medium text-ink">Live on storefront</span>
-              <span className="block text-xs text-ink/50">Needs a price above ₹0.</span>
-            </span>
-            <input
-              type="checkbox"
-              name="isActive"
-              defaultChecked={initial?.isActive}
-              className="peer sr-only"
-            />
-            <span className="relative h-6 w-11 shrink-0 rounded-full bg-ink/15 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-paper after:shadow after:transition-transform peer-checked:bg-forest peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold" />
-          </label>
+          <SwitchRow name="isActive" defaultChecked={initial?.isActive} label="Live on storefront" description="Needs a price above ₹0." />
         </section>
 
         <section className={card}>
           <h2 className="font-medium text-ink">Pricing &amp; stock</h2>
           <div className="mt-4 grid grid-cols-2 gap-4">
-            <Field label="Price (₹)">
-              <input
-                name="price"
-                type="number"
-                step="0.01"
-                min="0"
-                defaultValue={initial?.price}
-                required
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Stock" hint={variantTotal !== null ? "Total of the sizes below." : undefined}>
-              {variantTotal !== null ? (
-                <input
-                  name="stock"
-                  type="number"
-                  value={variantTotal}
-                  readOnly
-                  className={`${inputClass} bg-ink/[0.03]`}
-                />
-              ) : (
-                <input
-                  name="stock"
-                  type="number"
-                  min="0"
-                  defaultValue={initial?.stock}
-                  required
-                  className={inputClass}
-                />
-              )}
-            </Field>
+            <AdminInput label="Price (₹)" name="price" type="number" defaultValue={initial?.price} required htmlInput={{ step: "0.01", min: "0" }} />
+            {variantTotal !== null ? (
+              <AdminInput label="Stock" name="stock" type="number" value={variantTotal} hint="Total of the sizes below." htmlInput={{ readOnly: true }} />
+            ) : (
+              <AdminInput label="Stock" name="stock" type="number" defaultValue={initial?.stock} required htmlInput={{ min: "0" }} />
+            )}
             <div className="col-span-2">
-              <Field label="SKU">
-                <input name="sku" defaultValue={initial?.sku ?? ""} className={inputClass} />
-              </Field>
+              <AdminInput label="SKU" name="sku" defaultValue={initial?.sku ?? ""} />
             </div>
           </div>
         </section>
@@ -151,25 +111,10 @@ export function ProductForm({
           </p>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <Field label="Percent off (blank for none)">
-                <input
-                  name="discountPercent"
-                  type="number"
-                  min="1"
-                  max="90"
-                  step="1"
-                  defaultValue={initial?.discountPercent ?? ""}
-                  placeholder="e.g. 10"
-                  className={inputClass}
-                />
-              </Field>
+              <AdminInput label="Percent off (blank for none)" name="discountPercent" type="number" defaultValue={initial?.discountPercent ?? ""} placeholder="e.g. 10" htmlInput={{ min: "1", max: "90", step: "1" }} />
             </div>
-            <Field label="Starts (optional)">
-              <input name="discountStartsAt" type="date" defaultValue={initial?.discountStartsOn ?? ""} className={inputClass} />
-            </Field>
-            <Field label="Ends (optional)">
-              <input name="discountEndsAt" type="date" defaultValue={initial?.discountEndsOn ?? ""} className={inputClass} />
-            </Field>
+            <AdminInput label="Starts (optional)" name="discountStartsAt" type="date" defaultValue={initial?.discountStartsOn ?? ""} />
+            <AdminInput label="Ends (optional)" name="discountEndsAt" type="date" defaultValue={initial?.discountEndsOn ?? ""} />
           </div>
         </section>
 
@@ -182,81 +127,38 @@ export function ProductForm({
         <section className={card}>
           <h2 className="font-medium text-ink">Organisation</h2>
           <div className="mt-4 space-y-4">
-            <Field label="Category">
-              <select name="categoryId" defaultValue={initial?.categoryId ?? ""} className={inputClass}>
-                <option value="">None</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Collection">
-              <select name="collectionId" defaultValue={initial?.collectionId ?? ""} className={inputClass}>
-                <option value="">None</option>
-                {collections.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="URL slug" hint="Leave blank to generate from the name.">
-              <input name="slug" defaultValue={initial?.slug} className={inputClass} />
-            </Field>
-            <label className="flex items-center gap-2.5 pt-1 text-sm text-ink">
-              <input
-                type="checkbox"
-                name="isFeatured"
-                defaultChecked={initial?.isFeatured}
-                className="h-4 w-4 accent-forest"
-              />
-              Featured product
-            </label>
+            <AdminSelect label="Category" name="categoryId" defaultValue={initial?.categoryId ?? ""} slotProps={{ select: { displayEmpty: true } }}>
+              <MenuItem value="">None</MenuItem>
+              {categories.map((c) => (
+                <MenuItem key={c.id} value={c.id}>
+                  {c.name}
+                </MenuItem>
+              ))}
+            </AdminSelect>
+            <AdminSelect label="Collection" name="collectionId" defaultValue={initial?.collectionId ?? ""} slotProps={{ select: { displayEmpty: true } }}>
+              <MenuItem value="">None</MenuItem>
+              {collections.map((c) => (
+                <MenuItem key={c.id} value={c.id}>
+                  {c.name}
+                </MenuItem>
+              ))}
+            </AdminSelect>
+            <AdminInput label="URL slug" name="slug" defaultValue={initial?.slug} hint="Leave blank to generate from the name." />
+            <FormControlLabel control={<Checkbox name="isFeatured" defaultChecked={initial?.isFeatured} />} label="Featured product" />
           </div>
         </section>
 
-        {state.error ? (
-          <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-            {state.error}
-          </p>
-        ) : null}
+        <FormAlert>{state.error}</FormAlert>
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={pending}
-            className="flex-1 rounded-full bg-forest px-6 py-3 text-sm text-cream transition-colors hover:bg-forest-deep disabled:opacity-50"
-          >
-            {pending ? "Saving..." : "Save product"}
-          </button>
-          <Link
-            href="/admin/products"
-            className="rounded-full px-5 py-3 text-sm text-ink/60 transition-colors hover:text-ink"
-          >
+        <div className="flex items-center gap-3">
+          <SubmitButton pending={pending} pendingText="Saving..." size="large" sx={{ flex: 1 }}>
+            Save product
+          </SubmitButton>
+          <LinkButton href="/admin/products" variant="text" color="inherit">
             Cancel
-          </Link>
+          </LinkButton>
         </div>
       </div>
     </form>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-medium uppercase tracking-[0.08em] text-ink/55">{label}</span>
-      {children}
-      {hint ? <span className="mt-1.5 block text-xs leading-relaxed text-ink/45">{hint}</span> : null}
-    </label>
   );
 }

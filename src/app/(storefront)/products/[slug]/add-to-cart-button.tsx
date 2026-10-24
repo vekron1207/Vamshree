@@ -2,6 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import Button from "@mui/material/Button";
+import Collapse from "@mui/material/Collapse";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import CheckIcon from "@mui/icons-material/CheckRounded";
 import { cartKey, useCart, type CartItem } from "@/lib/cart-context";
 
 type Variant = { id: string; label: string; stock: number };
@@ -32,9 +37,9 @@ export function AddToCartButton({
   if (stock <= 0) {
     return (
       <div className={className}>
-        <p className="rounded-full border border-ink/15 px-8 py-3.5 text-center text-[12px] uppercase tracking-[0.18em] text-ink/50">
+        <Button fullWidth size="large" variant="outlined" color="inherit" disabled>
           Sold out
-        </p>
+        </Button>
       </div>
     );
   }
@@ -42,48 +47,59 @@ export function AddToCartButton({
   return (
     <div className={className}>
       {hasVariants ? (
-        <fieldset className="mb-6">
-          <legend className="text-[11px] uppercase tracking-[0.18em] text-ink/55">
+        <div className="mb-6">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-ink/55">
             Size{variant ? <span className="ml-2 text-ink">{variant.label}</span> : null}
-          </legend>
-          <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label="Size">
+          </p>
+          <ToggleButtonGroup
+            exclusive
+            value={variantId}
+            onChange={(_, next: string | null) => {
+              if (next) {
+                setVariantId(next);
+                setNeedSize(false);
+              }
+            }}
+            aria-label="Size"
+            sx={{ mt: 1.5, flexWrap: "wrap", gap: 1, "& .MuiToggleButtonGroup-grouped": { border: "1px solid rgba(14,59,34,0.25) !important", borderRadius: "999px !important" } }}
+          >
             {variants.map((v) => (
-              <label
+              <ToggleButton
                 key={v.id}
-                className={`relative flex h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border px-3 text-sm transition-colors ${
-                  v.stock <= 0
-                    ? "cursor-not-allowed border-ink/10 text-ink/30 line-through"
-                    : variantId === v.id
-                      ? "border-forest bg-forest text-cream"
-                      : "border-forest/25 text-ink hover:border-forest"
-                }`}
+                value={v.id}
+                disabled={v.stock <= 0}
+                color="primary"
+                sx={{
+                  minWidth: 46,
+                  height: 44,
+                  px: 1.75,
+                  fontSize: 14,
+                  textTransform: "none",
+                  letterSpacing: 0,
+                  transition: "background-color 300ms, color 300ms, border-color 300ms",
+                  textDecoration: v.stock <= 0 ? "line-through" : "none",
+                  "&.Mui-selected, &.Mui-selected:hover": { backgroundColor: "#0e3b22", color: "#fff" },
+                }}
               >
-                <input
-                  type="radio"
-                  name="size"
-                  className="sr-only"
-                  disabled={v.stock <= 0}
-                  checked={variantId === v.id}
-                  onChange={() => {
-                    setVariantId(v.id);
-                    setNeedSize(false);
-                  }}
-                />
                 {v.label}
-              </label>
+              </ToggleButton>
             ))}
-          </div>
-          {needSize ? (
+          </ToggleButtonGroup>
+          <Collapse in={needSize}>
             <p role="alert" className="mt-3 text-sm text-terracotta">
               Please choose a size.
             </p>
-          ) : null}
-        </fieldset>
+          </Collapse>
+        </div>
       ) : null}
 
-      <button
-        type="button"
+      <Button
+        fullWidth
+        size="large"
+        variant="contained"
+        color={added ? "secondary" : "primary"}
         disabled={hasVariants && variant ? !canAddMore : !hasVariants && !canAddMore}
+        startIcon={added ? <CheckIcon /> : undefined}
         onClick={() => {
           if (hasVariants && !variant) {
             setNeedSize(true);
@@ -93,24 +109,9 @@ export function AddToCartButton({
           setAdded(true);
           window.setTimeout(() => setAdded(false), 2200);
         }}
-        className="relative w-full overflow-hidden rounded-full bg-forest px-8 py-4 text-[12px] uppercase tracking-[0.18em] text-cream transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-forest-deep disabled:translate-y-0 disabled:opacity-50"
       >
-        <span
-          className={`block transition-[opacity,transform] duration-500 ${
-            added ? "-translate-y-6 opacity-0" : "translate-y-0 opacity-100"
-          }`}
-        >
-          {canAddMore || (hasVariants && !variant) ? "Add to bag" : "All available stock is in your bag"}
-        </span>
-        <span
-          aria-hidden={!added}
-          className={`absolute inset-0 flex items-center justify-center transition-[opacity,transform] duration-500 ${
-            added ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
-          }`}
-        >
-          Added &#10003;
-        </span>
-      </button>
+        {added ? "Added to bag" : canAddMore || (hasVariants && !variant) ? "Add to bag" : "All available stock is in your bag"}
+      </Button>
       <p className="mt-3 h-5 text-center text-xs text-ink/60" aria-live="polite">
         {inBag > 0 ? (
           <>

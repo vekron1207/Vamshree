@@ -1,3 +1,4 @@
+import { LinkButton } from "@/components/ui/link-button";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -130,12 +131,9 @@ export default function Home() {
             })}
           </Slider>
           <div className="mt-10 text-center">
-            <Link
-              href="/products"
-              className="inline-block rounded-full border border-forest/30 px-8 py-3 text-[12px] uppercase tracking-[0.18em] text-forest transition-colors hover:bg-forest hover:text-cream"
-            >
+            <LinkButton href="/products" variant="outlined" size="large">
               Shop all jewellery
-            </Link>
+            </LinkButton>
           </div>
         </div>
       </section>
@@ -184,12 +182,9 @@ export default function Home() {
           <p className="mt-4 font-tagline text-lg italic text-ink/70">
             Let it shine. Adorne your stories with Vaamshri.
           </p>
-          <Link
-            href="/products"
-            className="mt-10 inline-block rounded-full bg-forest px-9 py-3.5 text-[12px] uppercase tracking-[0.18em] text-cream transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-forest-deep"
-          >
+          <LinkButton href="/products" variant="contained" size="large" sx={{ mt: 5 }}>
             Shop now
-          </Link>
+          </LinkButton>
         </Reveal>
       </section>
     </>

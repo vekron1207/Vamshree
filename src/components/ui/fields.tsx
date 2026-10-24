@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import Alert from "@mui/material/Alert";
 import Button, { type ButtonProps } from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 import TextField, { type TextFieldProps } from "@mui/material/TextField";
 
 type TextInputProps = Omit<TextFieldProps, "error" | "helperText"> & {
@@ -69,5 +71,56 @@ export function FormAlert({ children, severity = "error" }: { children?: ReactNo
     <Alert severity={severity} role={severity === "error" ? "alert" : "status"} sx={{ alignItems: "center" }}>
       {children}
     </Alert>
+  );
+}
+
+// Admin screens use outlined, compact fields
+export function AdminInput(props: TextInputProps) {
+  return <TextInput variant="outlined" size="small" {...props} />;
+}
+
+export function AdminSelect({ children, ...rest }: Omit<TextInputProps, "select"> & { children: ReactNode }) {
+  return (
+    <TextInput variant="outlined" size="small" {...rest} select slotProps={{ ...rest.slotProps, select: { displayEmpty: true, ...((rest.slotProps as { select?: object } | undefined)?.select ?? {}) } }}>
+      {children}
+    </TextInput>
+  );
+}
+
+// A labelled on/off switch. Submits like a checkbox: `name` is present when on.
+export function SwitchRow({
+  name,
+  label,
+  description,
+  defaultChecked,
+  checked,
+  onChange,
+}: {
+  name?: string;
+  label: ReactNode;
+  description?: ReactNode;
+  defaultChecked?: boolean;
+  checked?: boolean;
+  onChange?: (checked: boolean) => void;
+}) {
+  return (
+    <FormControlLabel
+      labelPlacement="start"
+      sx={{ display: "flex", justifyContent: "space-between", m: 0, width: "100%", gap: 2 }}
+      control={
+        <Switch
+          name={name}
+          defaultChecked={checked === undefined ? defaultChecked : undefined}
+          checked={checked}
+          onChange={onChange ? (e) => onChange(e.target.checked) : undefined}
+        />
+      }
+      label={
+        <span>
+          <span className="block font-medium text-ink">{label}</span>
+          {description ? <span className="block text-xs text-ink/50">{description}</span> : null}
+        </span>
+      }
+    />
   );
 }

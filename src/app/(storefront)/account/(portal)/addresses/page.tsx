@@ -1,3 +1,5 @@
+import { LinkButton } from "@/components/ui/link-button";
+import Button from "@mui/material/Button";
 import Link from "next/link";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -21,12 +23,9 @@ export default async function AddressesPage() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-3xl text-forest sm:text-4xl">Addresses</h1>
-        <Link
-          href="/account/addresses/new"
-          className="rounded-full bg-forest px-6 py-2.5 text-[12px] uppercase tracking-[0.16em] text-cream transition-colors hover:bg-forest-deep"
-        >
+        <LinkButton href="/account/addresses/new" variant="contained" size="small">
           Add address
-        </Link>
+        </LinkButton>
       </div>
 
       {addresses.length === 0 ? (
@@ -60,15 +59,15 @@ export default async function AddressesPage() {
                 </Link>
                 {!a.isDefault ? (
                   <form action={setDefaultAddressAction.bind(null, a.id)}>
-                    <button type="submit" className="text-forest underline underline-offset-4">
+                    <Button type="submit" size="small" variant="text">
                       Make default
-                    </button>
+                    </Button>
                   </form>
                 ) : null}
                 <form action={deleteAddressAction.bind(null, a.id)} className="ml-auto">
-                  <button type="submit" className="text-ink/50 transition-colors hover:text-terracotta">
+                  <Button type="submit" size="small" variant="text" color="error">
                     Delete
-                  </button>
+                  </Button>
                 </form>
               </div>
             </li>

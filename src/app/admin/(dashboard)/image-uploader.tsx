@@ -1,6 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import MuiIconButton from "@mui/material/IconButton";
+import ArrowBackIcon from "@mui/icons-material/ArrowBackRounded";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForwardRounded";
+import CloseIcon from "@mui/icons-material/CloseRounded";
+import SwapIcon from "@mui/icons-material/SwapHorizRounded";
+import { AdminInput, FormAlert } from "@/components/ui/fields";
 import { uploadImageAction } from "./upload-actions";
 
 type Kind = "products" | "collections" | "pages";
@@ -108,19 +116,19 @@ export function ImageUploader({
                 {multiple ? (
                   <span className="flex gap-1">
                     <IconButton label="Move earlier" disabled={i === 0} onClick={() => move(i, -1)}>
-                      &larr;
+                      <ArrowBackIcon fontSize="inherit" />
                     </IconButton>
                     <IconButton label="Move later" disabled={i === urls.length - 1} onClick={() => move(i, 1)}>
-                      &rarr;
+                      <ArrowForwardIcon fontSize="inherit" />
                     </IconButton>
                   </span>
                 ) : (
                   <IconButton label="Replace image" onClick={() => inputRef.current?.click()}>
-                    Replace
+                    <SwapIcon fontSize="inherit" />
                   </IconButton>
                 )}
                 <IconButton label="Remove image" onClick={() => setUrls((prev) => prev.filter((u) => u !== url))}>
-                  &#10005;
+                  <CloseIcon fontSize="inherit" />
                 </IconButton>
               </div>
             </li>
@@ -132,7 +140,7 @@ export function ImageUploader({
                 <img src={p.preview} alt="" className="h-full w-full object-cover opacity-40" />
               </div>
               <span className="absolute inset-0 flex items-center justify-center text-xs text-forest">
-                <span className="h-5 w-5 animate-spin rounded-full border-2 border-forest/30 border-t-forest" aria-hidden />
+                <CircularProgress size={22} aria-hidden />
                 <span className="sr-only">Uploading {p.name}</span>
               </span>
             </li>
@@ -185,8 +193,9 @@ export function ImageUploader({
 
       <details className="mt-3 text-xs text-ink/55">
         <summary className="cursor-pointer select-none hover:text-ink">Use an image link instead</summary>
-        <div className="mt-2 flex gap-2">
-          <input
+        <div className="mt-3 flex items-center gap-2">
+          <AdminInput
+            label="Image link"
             value={urlDraft}
             onChange={(e) => setUrlDraft(e.target.value)}
             onKeyDown={(e) => {
@@ -196,19 +205,16 @@ export function ImageUploader({
               }
             }}
             placeholder="https://..."
-            className="min-w-0 flex-1 rounded-lg border border-ink/12 bg-paper px-3 py-2 text-sm outline-none focus:border-forest/60"
           />
-          <button type="button" onClick={addUrl} className="rounded-lg bg-ink/5 px-3 text-sm text-ink hover:bg-ink/10">
+          <Button variant="outlined" size="small" onClick={addUrl} sx={{ flexShrink: 0 }}>
             Add
-          </button>
+          </Button>
         </div>
       </details>
 
-      {error ? (
-        <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-          {error}
-        </p>
-      ) : null}
+      <div className="mt-3">
+        <FormAlert>{error}</FormAlert>
+      </div>
     </div>
   );
 }
@@ -225,15 +231,23 @@ function IconButton({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
+    <MuiIconButton
       aria-label={label}
       title={label}
       disabled={disabled}
       onClick={onClick}
-      className="min-w-7 rounded-full bg-paper/95 px-2 py-1 text-xs text-ink shadow ring-1 ring-ink/10 transition-colors hover:bg-paper disabled:opacity-30"
+      size="small"
+      sx={{
+        width: 30,
+        height: 30,
+        fontSize: 16,
+        backgroundColor: "rgba(255,255,255,0.95)",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.18)",
+        "&:hover": { backgroundColor: "#fff" },
+        "&.Mui-disabled": { opacity: 0.35, backgroundColor: "rgba(255,255,255,0.95)" },
+      }}
     >
       {children}
-    </button>
+    </MuiIconButton>
   );
 }

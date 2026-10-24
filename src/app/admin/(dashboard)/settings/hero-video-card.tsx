@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Button from "@mui/material/Button";
+import UploadIcon from "@mui/icons-material/FileUploadOutlined";
+import { FormAlert, SubmitButton } from "@/components/ui/fields";
 import { saveHeroVideos } from "./actions";
 
 type Slot = { url: string; custom: boolean };
@@ -52,33 +55,31 @@ function VideoSlot({
         <video key={shown} src={shown} muted loop playsInline autoPlay className="h-full w-full object-cover" />
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-        <label className="cursor-pointer rounded-full border border-forest/30 px-4 py-1.5 text-xs text-forest hover:bg-forest hover:text-cream">
+        <Button component="label" size="small" variant="outlined" disabled={busy} startIcon={<UploadIcon />}>
           {busy ? "Uploading..." : "Choose a video"}
           <input
             type="file"
             accept="video/mp4,video/webm"
             disabled={busy}
-            className="sr-only"
+            hidden
             onChange={(e) => {
               const f = e.target.files?.[0];
               e.target.value = "";
               if (f) void upload(f);
             }}
           />
-        </label>
+        </Button>
         {value ? (
-          <button type="button" onClick={() => onChange("")} className="text-xs text-ink/60 hover:text-rose-700">
+          <Button size="small" variant="text" color="inherit" onClick={() => onChange("")}>
             Use the original video
-          </button>
+          </Button>
         ) : (
           <span className="text-xs text-ink/45">Using the original video</span>
         )}
       </div>
-      {error ? (
-        <p role="alert" className="mt-2 text-sm text-rose-700">
-          {error}
-        </p>
-      ) : null}
+      <div className="mt-2">
+        <FormAlert>{error}</FormAlert>
+      </div>
     </div>
   );
 }
@@ -122,9 +123,11 @@ export function HeroVideoCard({
         />
       </div>
       <div className="mt-5 flex items-center gap-3">
-        <button
+        <SubmitButton
           type="button"
-          disabled={pending}
+          size="small"
+          pending={pending}
+          pendingText="Saving..."
           onClick={() =>
             startTransition(async () => {
               const fd = new FormData();
@@ -134,15 +137,10 @@ export function HeroVideoCard({
               setMsg(res.ok ? { ok: true, text: "Saved. The homepage now uses these videos." } : { ok: false, text: res.error });
             })
           }
-          className="rounded-full bg-forest px-6 py-2.5 text-sm text-cream hover:bg-forest-deep disabled:opacity-50"
         >
-          {pending ? "Saving..." : "Save"}
-        </button>
-        {msg ? (
-          <span role={msg.ok ? "status" : "alert"} className={`text-sm ${msg.ok ? "text-forest" : "text-rose-700"}`}>
-            {msg.text}
-          </span>
-        ) : null}
+          Save
+        </SubmitButton>
+        {msg ? <FormAlert severity={msg.ok ? "success" : "error"}>{msg.text}</FormAlert> : null}
       </div>
     </section>
   );

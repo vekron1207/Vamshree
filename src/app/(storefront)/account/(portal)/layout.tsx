@@ -1,3 +1,4 @@
+import Button from "@mui/material/Button";
 import { logoutAction } from "../auth-actions";
 import { AccountNav } from "./account-nav";
 
@@ -14,9 +15,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
             <AccountNav />
           </div>
           <form action={logoutAction} className="mt-4 hidden lg:block">
-            <button type="submit" className="py-2.5 text-[12px] uppercase tracking-[0.14em] text-ink/50 transition-colors hover:text-terracotta">
+            <Button type="submit" size="small" variant="text" color="inherit">
               Sign out
-            </button>
+            </Button>
           </form>
         </aside>
         <div className="min-w-0">{children}</div>

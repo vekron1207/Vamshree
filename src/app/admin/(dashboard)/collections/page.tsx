@@ -1,3 +1,4 @@
+import Button from "@mui/material/Button";
 import Link from "next/link";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -89,9 +90,9 @@ export default async function AdminCollectionsPage() {
                         {c.saleEndsAt ? ` until ${formatWhen(c.saleEndsAt)}` : ""}
                       </span>
                       <form action={endCollectionSale.bind(null, c.id)}>
-                        <button type="submit" className="text-xs text-ink/50 underline-offset-4 hover:text-rose-700 hover:underline">
+                        <Button type="submit" size="small" variant="text" color="error">
                           End sale
-                        </button>
+                        </Button>
                       </form>
                     </>
                   ) : scheduled ? (

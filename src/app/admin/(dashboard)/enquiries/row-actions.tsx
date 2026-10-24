@@ -1,32 +1,34 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
+import Button from "@mui/material/Button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { deleteEnquiry, setEnquiryReplied } from "./actions";
 
 export function EnquiryActions({ id, isReplied }: { id: string; isReplied: boolean }) {
   const [pending, startTransition] = useTransition();
+  const [confirming, setConfirming] = useState(false);
   return (
-    <span className="flex items-center gap-4 text-xs">
-      <button
-        type="button"
+    <span className="flex items-center gap-1">
+      <Button
+        size="small"
+        variant="text"
         disabled={pending}
         onClick={() => startTransition(async () => void (await setEnquiryReplied(id, !isReplied)))}
-        className="text-forest hover:underline disabled:opacity-50"
       >
         {isReplied ? "Mark as new" : "Mark as replied"}
-      </button>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() => {
-          if (window.confirm("Delete this message for good?")) {
-            startTransition(async () => void (await deleteEnquiry(id)));
-          }
-        }}
-        className="text-rose-700 hover:underline disabled:opacity-50"
-      >
+      </Button>
+      <Button size="small" variant="text" color="error" disabled={pending} onClick={() => setConfirming(true)}>
         Delete
-      </button>
+      </Button>
+      <ConfirmDialog
+        open={confirming}
+        title="Delete this message for good?"
+        confirmLabel="Delete"
+        danger
+        onClose={() => setConfirming(false)}
+        onConfirm={() => startTransition(async () => void (await deleteEnquiry(id)))}
+      />
     </span>
   );
 }

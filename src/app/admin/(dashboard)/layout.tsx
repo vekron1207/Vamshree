@@ -1,3 +1,4 @@
+import Button from "@mui/material/Button";
 import { BrandMark } from "@/components/brand";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -46,9 +47,9 @@ export default async function AdminDashboardLayout({
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs text-cream/80">{session.email}</p>
               <form action={logoutAction}>
-                <button type="submit" className="text-[11px] text-cream/50 transition-colors hover:text-gold">
+                <Button type="submit" size="small" variant="text" sx={{ p: 0, minWidth: 0, fontSize: 11, color: "rgba(255,255,255,0.55)", "&:hover": { color: "#c9a355", backgroundColor: "transparent", transform: "none" } }}>
                   Sign out
-                </button>
+                </Button>
               </form>
             </div>
           </div>
@@ -63,9 +64,9 @@ export default async function AdminDashboardLayout({
               <span className="font-display text-sm tracking-[0.14em] text-cream">Vaamshri</span>
             </Link>
             <form action={logoutAction}>
-              <button type="submit" className="text-xs text-cream/60">
+              <Button type="submit" size="small" variant="text" sx={{ color: "rgba(255,255,255,0.7)" }}>
                 Sign out
-              </button>
+              </Button>
             </form>
           </div>
           <div className="mt-3">

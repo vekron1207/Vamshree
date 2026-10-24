@@ -16,6 +16,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import type { PincodeResult } from "@/lib/delhivery";
 import { FormAlert, SubmitButton, TextInput } from "@/components/ui/fields";
 import { LinkButton } from "@/components/ui/link-button";
+import { useSamplePhone } from "@/lib/use-sample-phone";
 import {
   checkDeliveryPincode,
   createCheckoutOrder,
@@ -51,6 +52,7 @@ export default function CheckoutPage() {
   const { items, subtotal, clear } = useCart();
   usePriceSync();
   const router = useRouter();
+  const samplePhone = useSamplePhone();
   const [form, setForm] = useState<ShippingDetails>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -255,7 +257,7 @@ export default function CheckoutPage() {
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <TextInput label="Full name" required value={form.name} onChange={(e) => update("name", e.target.value)} htmlInput={{ autoComplete: "name" }} sx={{ gridColumn: { sm: "1 / -1" } }} />
               <TextInput label="Email" required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} htmlInput={{ autoComplete: "email" }} />
-              <TextInput label="Mobile number" required type="tel" placeholder="98765 43210" value={form.phone} onChange={(e) => update("phone", e.target.value)} htmlInput={{ autoComplete: "tel", inputMode: "tel" }} />
+              <TextInput label="Mobile number" required type="tel" placeholder={samplePhone} value={form.phone} onChange={(e) => update("phone", e.target.value)} htmlInput={{ autoComplete: "tel", inputMode: "tel" }} />
             </div>
           </fieldset>
 

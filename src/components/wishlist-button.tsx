@@ -1,26 +1,32 @@
 "use client";
 
+import IconButton from "@mui/material/IconButton";
+import FavoriteIcon from "@mui/icons-material/FavoriteRounded";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorderRounded";
 import { useWishlist } from "@/lib/wishlist-context";
 
 export function WishlistButton({ productId, name, className = "" }: { productId: string; name: string; className?: string }) {
   const { has, toggle } = useWishlist();
   const saved = has(productId);
   return (
-    <button
-      type="button"
+    <IconButton
       aria-pressed={saved}
       aria-label={saved ? `Remove ${name} from wishlist` : `Save ${name} to wishlist`}
       onClick={() => toggle(productId)}
-      className={`flex h-9 w-9 items-center justify-center rounded-full bg-cream/90 text-forest shadow-sm backdrop-blur transition-transform hover:scale-110 ${className}`}
+      color="primary"
+      size="small"
+      className={className}
+      sx={{
+        width: 38,
+        height: 38,
+        backgroundColor: "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(6px)",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+        "&:hover": { backgroundColor: "#fff", transform: "scale(1.1)" },
+        "& svg": { transition: "transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1)", transform: saved ? "scale(1.12)" : "scale(1)" },
+      }}
     >
-      <svg width="17" height="17" viewBox="0 0 20 20" aria-hidden fill={saved ? "currentColor" : "none"}>
-        <path
-          d="M10 17s-6.5-4.1-6.5-8.6A3.6 3.6 0 0 1 10 6.3a3.6 3.6 0 0 1 6.5 2.1C16.5 12.9 10 17 10 17Z"
-          stroke="currentColor"
-          strokeWidth="1.3"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </button>
+      {saved ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+    </IconButton>
   );
 }

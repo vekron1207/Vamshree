@@ -9,6 +9,7 @@ import { LinkButton } from "@/components/ui/link-button";
 import { FormAlert, SelectInput, SubmitButton, TextInput } from "@/components/ui/fields";
 import { INDIAN_STATES } from "../../ui";
 import type { FormState } from "../actions";
+import { useSamplePhone } from "@/lib/use-sample-phone";
 
 export type AddressInitial = {
   label?: string;
@@ -34,12 +35,13 @@ export function AddressForm({
   const [state, formAction, pending] = useActionState(action, {});
   const onSubmit = useSubmit(formAction);
   const e = state.fieldErrors ?? {};
+  const samplePhone = useSamplePhone();
 
   return (
     <form onSubmit={onSubmit} className="mt-8 grid max-w-2xl gap-6 sm:grid-cols-2" noValidate>
       <TextInput label="Label" name="label" error={e.label} hint="e.g. Home, Work" defaultValue={initial?.label ?? "Home"} htmlInput={{ maxLength: 30 }} sx={{ gridColumn: { sm: "1 / -1" } }} />
       <TextInput label="Recipient name" name="fullName" required error={e.fullName} defaultValue={initial?.fullName} htmlInput={{ autoComplete: "name" }} />
-      <TextInput label="Mobile number" name="phone" type="tel" required error={e.phone} defaultValue={initial?.phone} placeholder="98765 43210" htmlInput={{ autoComplete: "tel", inputMode: "tel" }} />
+      <TextInput label="Mobile number" name="phone" type="tel" required error={e.phone} defaultValue={initial?.phone} placeholder={samplePhone} htmlInput={{ autoComplete: "tel", inputMode: "tel" }} />
       <TextInput label="Address" name="line1" required error={e.line1} defaultValue={initial?.line1} htmlInput={{ autoComplete: "address-line1" }} sx={{ gridColumn: { sm: "1 / -1" } }} />
       <TextInput label="Apartment, landmark (optional)" name="line2" defaultValue={initial?.line2 ?? ""} htmlInput={{ autoComplete: "address-line2" }} sx={{ gridColumn: { sm: "1 / -1" } }} />
       <TextInput label="City" name="city" required error={e.city} defaultValue={initial?.city} htmlInput={{ autoComplete: "address-level2" }} />

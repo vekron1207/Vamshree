@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useTransition, type ReactNode } from "react";
+import Button from "@mui/material/Button";
+import AddIcon from "@mui/icons-material/AddRounded";
+import { AdminInput, FormAlert, SubmitButton, SwitchRow } from "@/components/ui/fields";
 import { useSubmit } from "@/lib/use-submit";
 import type { Announcement, AnnouncementItem, BusinessInfo, SaleBanner, StoreSettings } from "@/lib/settings";
 import type { ShippingRule } from "@/lib/shipping";
 import { saveAnnouncement, saveBusiness, saveSaleBanner, saveShipping, saveStore, type SettingsResult } from "./actions";
 import { ImageUploader } from "../image-uploader";
 
-const inputClass =
-  "w-full rounded-lg border border-ink/12 bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-forest/60 focus:ring-2 focus:ring-forest/10";
 const card = "rounded-2xl bg-paper p-5 shadow-[0_1px_2px_rgba(18,20,15,0.06)] sm:p-6";
 
 function SettingsCard({
@@ -36,32 +37,16 @@ function SettingsCard({
       <p className="mt-1 text-xs text-ink/50">{description}</p>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">{children}</div>
       <div className="mt-5 flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-full bg-forest px-6 py-2.5 text-sm text-cream hover:bg-forest-deep disabled:opacity-50"
-        >
-          {pending ? "Saving..." : "Save"}
-        </button>
-        {msg ? (
-          <span role={msg.ok ? "status" : "alert"} className={`text-sm ${msg.ok ? "text-forest" : "text-rose-700"}`}>
-            {msg.text}
-          </span>
-        ) : null}
+        <SubmitButton pending={pending} pendingText="Saving..." size="small">
+          Save
+        </SubmitButton>
+        {msg ? <FormAlert severity={msg.ok ? "success" : "error"}>{msg.text}</FormAlert> : null}
       </div>
     </form>
   );
 }
 
-function Field({ label, hint, className = "", children }: { label: string; hint?: string; className?: string; children: ReactNode }) {
-  return (
-    <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-xs font-medium uppercase tracking-[0.08em] text-ink/55">{label}</span>
-      {children}
-      {hint ? <span className="mt-1.5 block text-xs text-ink/45">{hint}</span> : null}
-    </label>
-  );
-}
+const wide = { gridColumn: { sm: "1 / -1" } } as const;
 
 export function ShippingCard({ rule }: { rule: ShippingRule }) {
   return (
@@ -70,12 +55,8 @@ export function ShippingCard({ rule }: { rule: ShippingRule }) {
       description="A flat charge, optionally free above a spend. Set the fee to 0 for free shipping on everything."
       action={saveShipping}
     >
-      <Field label="Flat shipping fee (₹)">
-        <input name="flatFee" type="number" min={0} defaultValue={rule.flatFee} className={inputClass} />
-      </Field>
-      <Field label="Free above (₹)" hint="Leave blank for no free-shipping threshold.">
-        <input name="freeAbove" type="number" min={0} defaultValue={rule.freeAbove ?? ""} className={inputClass} />
-      </Field>
+      <AdminInput label="Flat shipping fee (₹)" name="flatFee" type="number" defaultValue={rule.flatFee} htmlInput={{ min: 0 }} />
+      <AdminInput label="Free above (₹)" name="freeAbove" type="number" defaultValue={rule.freeAbove ?? ""} hint="Leave blank for no free-shipping threshold." htmlInput={{ min: 0 }} />
     </SettingsCard>
   );
 }
@@ -87,24 +68,12 @@ export function BusinessCard({ business }: { business: BusinessInfo }) {
       description="Printed on invoices."
       action={saveBusiness}
     >
-      <Field label="Business name" className="sm:col-span-2">
-        <input name="legalName" defaultValue={business.legalName} required className={inputClass} />
-      </Field>
-      <Field label="GSTIN (optional)">
-        <input name="gstin" defaultValue={business.gstin} className={inputClass} />
-      </Field>
-      <Field label="Invoice prefix" hint="Letters and numbers, e.g. VA">
-        <input name="invoicePrefix" defaultValue={business.invoicePrefix} maxLength={8} className={inputClass} />
-      </Field>
-      <Field label="Address" className="sm:col-span-2">
-        <textarea name="address" rows={3} defaultValue={business.address} className={inputClass} />
-      </Field>
-      <Field label="Phone">
-        <input name="phone" defaultValue={business.phone} className={inputClass} />
-      </Field>
-      <Field label="Email">
-        <input name="email" type="email" defaultValue={business.email} className={inputClass} />
-      </Field>
+      <AdminInput label="Business name" name="legalName" defaultValue={business.legalName} required sx={wide} />
+      <AdminInput label="GSTIN (optional)" name="gstin" defaultValue={business.gstin} />
+      <AdminInput label="Invoice prefix" name="invoicePrefix" defaultValue={business.invoicePrefix} hint="Letters and numbers, e.g. VA" htmlInput={{ maxLength: 8 }} />
+      <AdminInput label="Address" name="address" defaultValue={business.address} multiline minRows={3} sx={wide} />
+      <AdminInput label="Phone" name="phone" defaultValue={business.phone} />
+      <AdminInput label="Email" name="email" type="email" defaultValue={business.email} />
     </SettingsCard>
   );
 }
@@ -116,9 +85,7 @@ export function StoreCard({ store }: { store: StoreSettings }) {
       description="Products at or below this stock level are flagged as low on the dashboard and product list."
       action={saveStore}
     >
-      <Field label="Low-stock level">
-        <input name="lowStockThreshold" type="number" min={0} defaultValue={store.lowStockThreshold} className={inputClass} />
-      </Field>
+      <AdminInput label="Low-stock level" name="lowStockThreshold" type="number" defaultValue={store.lowStockThreshold} htmlInput={{ min: 0 }} />
     </SettingsCard>
   );
 }
@@ -137,51 +104,56 @@ export function AnnouncementCard({ announcement }: { announcement: Announcement 
       action={saveAnnouncement}
     >
       <input type="hidden" name="items" value={JSON.stringify(items)} />
-      <label className="flex items-center gap-2.5 text-sm text-ink sm:col-span-2">
-        <input type="checkbox" name="enabled" defaultChecked={announcement.enabled} className="h-4 w-4 accent-forest" />
-        Show these messages
-      </label>
+      <div className="sm:col-span-2">
+        <SwitchRow name="enabled" defaultChecked={announcement.enabled} label="Show these messages" />
+      </div>
       {items.map((item, i) => (
-        <div key={i} className="grid gap-3 rounded-xl border border-ink/10 p-4 sm:col-span-2 sm:grid-cols-[1fr_9rem]">
-          <Field label={`Message ${i + 1}`} hint="Up to 140 characters, e.g. Festive Season Sale" className="sm:col-span-2">
-            <input
-              value={item.text}
-              maxLength={140}
-              onChange={(e) => update(i, { text: e.target.value })}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Coupon code (optional)" hint="Shown as a tap-to-copy badge after the message">
-            <input
-              value={item.code}
-              maxLength={24}
-              onChange={(e) => update(i, { code: e.target.value.toUpperCase() })}
-              placeholder="VSFAM20"
-              className={`${inputClass} uppercase`}
-            />
-          </Field>
-          <Field label="Link (optional)" hint="/products or /collections/golden-hour-story">
-            <input value={item.link} onChange={(e) => update(i, { link: e.target.value })} className={inputClass} />
-          </Field>
+        <div key={i} className="grid gap-4 rounded-xl border border-ink/10 p-4 sm:col-span-2 sm:grid-cols-2">
+          <AdminInput
+            label={`Message ${i + 1}`}
+            hint="Up to 140 characters, e.g. Festive Season Sale"
+            value={item.text}
+            onChange={(e) => update(i, { text: e.target.value })}
+            htmlInput={{ maxLength: 140 }}
+            sx={wide}
+          />
+          <AdminInput
+            label="Coupon code (optional)"
+            hint="Shown as a tap-to-copy badge after the message"
+            value={item.code}
+            onChange={(e) => update(i, { code: e.target.value.toUpperCase() })}
+            placeholder="VSFAM20"
+            htmlInput={{ maxLength: 24, style: { textTransform: "uppercase" } }}
+          />
+          <AdminInput
+            label="Link (optional)"
+            hint="/products or /collections/golden-hour-story"
+            value={item.link}
+            onChange={(e) => update(i, { link: e.target.value })}
+          />
           {items.length > 1 ? (
-            <button
-              type="button"
+            <Button
+              size="small"
+              variant="text"
+              color="error"
               onClick={() => setItems((list) => list.filter((_, j) => j !== i))}
-              className="justify-self-start text-xs text-rose-700 hover:underline sm:col-span-2"
+              sx={{ justifySelf: "start", gridColumn: { sm: "1 / -1" } }}
             >
               Remove this message
-            </button>
+            </Button>
           ) : null}
         </div>
       ))}
       {items.length < 4 ? (
-        <button
-          type="button"
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<AddIcon />}
           onClick={() => setItems((list) => [...list, { text: "", code: "", link: "" }])}
-          className="justify-self-start rounded-full border border-forest/30 px-4 py-1.5 text-xs text-forest hover:bg-forest hover:text-cream sm:col-span-2"
+          sx={{ justifySelf: "start", gridColumn: { sm: "1 / -1" } }}
         >
-          + Add a message
-        </button>
+          Add a message
+        </Button>
       ) : null}
     </SettingsCard>
   );
@@ -194,10 +166,9 @@ export function SaleBannerCard({ banner }: { banner: SaleBanner }) {
       description="A picture banner on the homepage, just below the categories. Switched off, the homepage shows a simple text banner for any collection sale that is running."
       action={saveSaleBanner}
     >
-      <label className="flex items-center gap-2.5 text-sm text-ink sm:col-span-2">
-        <input type="checkbox" name="enabled" defaultChecked={banner.enabled} className="h-4 w-4 accent-forest" />
-        Show the banner
-      </label>
+      <div className="sm:col-span-2">
+        <SwitchRow name="enabled" defaultChecked={banner.enabled} label="Show the banner" />
+      </div>
       <div className="sm:col-span-2">
         <ImageUploader
           name="imageUrl"
@@ -207,12 +178,8 @@ export function SaleBannerCard({ banner }: { banner: SaleBanner }) {
           hint="Best at 3:2, such as 1800 × 1200 pixels. It is shown whole, never cropped. JPG, PNG or WebP."
         />
       </div>
-      <Field label="Describe the picture" hint="Read out for people who can't see it, e.g. Festive Season Sale, flat 50% off" className="sm:col-span-2">
-        <input name="alt" maxLength={200} defaultValue={banner.alt} className={inputClass} />
-      </Field>
-      <Field label="Link (optional)" hint="Where a click goes, e.g. /products or /collections/golden-hour-story" className="sm:col-span-2">
-        <input name="link" defaultValue={banner.link} placeholder="/products" className={inputClass} />
-      </Field>
+      <AdminInput label="Describe the picture" name="alt" defaultValue={banner.alt} hint="Read out for people who can't see it, e.g. Festive Season Sale, flat 50% off" htmlInput={{ maxLength: 200 }} sx={wide} />
+      <AdminInput label="Link (optional)" name="link" defaultValue={banner.link} placeholder="/products" hint="Where a click goes, e.g. /products or /collections/golden-hour-story" sx={wide} />
     </SettingsCard>
   );
 }

@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import Button from "@mui/material/Button";
+import CheckIcon from "@mui/icons-material/CheckRounded";
 import { cartKey, useCart } from "@/lib/cart-context";
+import { LinkButton } from "@/components/ui/link-button";
 
 // Add to bag straight from a product card. Pieces sold in sizes need a size
 // first, so those send the shopper to the product page instead.
@@ -25,24 +27,21 @@ export function QuickAddButton({
 }) {
   const { addItem, items } = useCart();
   const [added, setAdded] = useState(false);
-  const base = "mt-3 block w-full rounded-full px-4 py-2.5 text-center text-[11px] uppercase tracking-[0.16em]";
+  const sx = { mt: 1.5, py: 1.1 } as const;
 
   if (stock <= 0) {
     return (
-      <p className={`${base} border border-ink/15 text-ink/45`} aria-disabled="true">
+      <Button fullWidth size="small" variant="outlined" color="inherit" disabled sx={sx}>
         Sold out
-      </p>
+      </Button>
     );
   }
 
   if (hasSizes) {
     return (
-      <Link
-        href={`/products/${slug}`}
-        className={`${base} border border-forest/30 text-forest transition-colors hover:bg-forest hover:text-cream`}
-      >
+      <LinkButton href={`/products/${slug}`} fullWidth size="small" variant="outlined" sx={sx}>
         Choose size
-      </Link>
+      </LinkButton>
     );
   }
 
@@ -50,17 +49,21 @@ export function QuickAddButton({
   const canAdd = inBag < stock;
 
   return (
-    <button
-      type="button"
+    <Button
+      fullWidth
+      size="small"
+      variant="contained"
       disabled={!canAdd}
+      color={added ? "secondary" : "primary"}
+      startIcon={added ? <CheckIcon fontSize="small" /> : undefined}
       onClick={() => {
         addItem({ productId, name, price, image });
         setAdded(true);
         window.setTimeout(() => setAdded(false), 1800);
       }}
-      className={`${base} bg-forest text-cream transition-[background-color] duration-300 hover:bg-forest-deep disabled:opacity-50`}
+      sx={sx}
     >
-      {added ? "Added ✓" : canAdd ? "Add to bag" : "All in your bag"}
-    </button>
+      {added ? "Added" : canAdd ? "Add to bag" : "All in your bag"}
+    </Button>
   );
 }
