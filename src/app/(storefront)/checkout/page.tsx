@@ -13,9 +13,11 @@ import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Collapse from "@mui/material/Collapse";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import type { PincodeResult } from "@/lib/delhivery";
 import { FormAlert, SubmitButton, TextInput } from "@/components/ui/fields";
 import { LinkButton } from "@/components/ui/link-button";
 import {
+  checkDeliveryPincode,
   createCheckoutOrder,
   loadCheckoutPrefill,
   previewDiscount,
@@ -72,6 +74,22 @@ export default function CheckoutPage() {
   const shippingFee = shippingFor(afterDiscount, rule);
   const total = afterDiscount + shippingFee;
   const toFree = amountToFreeShipping(afterDiscount, rule);
+
+  // Check the PIN code with the courier as soon as all six digits are in
+  const [pinResult, setPinResult] = useState<{ pin: string; result: PincodeResult } | null>(null);
+  useEffect(() => {
+    const pin = form.postalCode.trim();
+    if (!/^[1-9]\d{5}$/.test(pin)) return;
+    let cancelled = false;
+    checkDeliveryPincode(pin)
+      .then((result) => !cancelled && setPinResult({ pin, result }))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [form.postalCode]);
+  const pinState = pinResult && pinResult.pin === form.postalCode.trim() ? pinResult.result : null;
+  const pinBlocked = pinState?.status === "unserviceable";
 
   async function applyCode() {
     setCodeError(null);
@@ -275,7 +293,15 @@ export default function CheckoutPage() {
               <TextInput label="Apartment, landmark (optional)" value={form.line2} onChange={(e) => update("line2", e.target.value)} htmlInput={{ autoComplete: "address-line2" }} sx={{ gridColumn: { sm: "1 / -1" } }} />
               <TextInput label="City" required value={form.city} onChange={(e) => update("city", e.target.value)} htmlInput={{ autoComplete: "address-level2" }} />
               <TextInput label="State" required value={form.state} onChange={(e) => update("state", e.target.value)} htmlInput={{ autoComplete: "address-level1" }} />
-              <TextInput label="PIN code" required value={form.postalCode} onChange={(e) => update("postalCode", e.target.value)} htmlInput={{ inputMode: "numeric", autoComplete: "postal-code" }} />
+              <TextInput
+                label="PIN code"
+                required
+                value={form.postalCode}
+                onChange={(e) => update("postalCode", e.target.value)}
+                htmlInput={{ inputMode: "numeric", autoComplete: "postal-code", maxLength: 6 }}
+                error={pinBlocked ? "Sorry, we can't deliver to this PIN code yet." : undefined}
+                hint={pinState?.status === "serviceable" ? "Delivery available ✓" : undefined}
+              />
               <TextInput label="Country" value="India" disabled htmlInput={{ readOnly: true, "aria-readonly": "true", autoComplete: "country-name" }} />
             </div>
             {prefill && selectedAddress === null ? (
@@ -311,7 +337,7 @@ export default function CheckoutPage() {
             <FormAlert>{error}</FormAlert>
           </div>
 
-          <SubmitButton pending={submitting} pendingText="Opening secure payment..." size="large" fullWidth sx={{ mt: 5 }}>
+          <SubmitButton pending={submitting} disabled={pinBlocked} pendingText="Opening secure payment..." size="large" fullWidth sx={{ mt: 5 }}>
             {`Pay ${formatINR(total)}`}
           </SubmitButton>
           <p className="mt-3 text-center text-xs text-ink/50">

@@ -3,6 +3,7 @@
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getRazorpay } from "@/lib/razorpay";
+import { checkPincode, type PincodeResult } from "@/lib/delhivery";
 import { priceFor, SALE_FIELDS } from "@/lib/pricing";
 import { updateTag } from "next/cache";
 import { getCurrentCustomer } from "@/lib/customer-session";
@@ -124,6 +125,12 @@ export async function getCheckoutConfig() {
 
 export type DiscountPreview = { ok: true; code: string; amount: number; description: string } | { ok: false; error: string };
 
+// Lets the checkout tell the customer straight away whether we can deliver to a PIN code
+export async function checkDeliveryPincode(pin: string): Promise<PincodeResult> {
+  if (!allow(`pincode:${await clientIp()}`, 60, 10 * 60 * 1000)) return { status: "unknown" };
+  return checkPincode(String(pin ?? "").trim());
+}
+
 // Previews a code against the current bag. Nothing is used up until checkout.
 export async function previewDiscount(code: string, items: CartLine[]): Promise<DiscountPreview> {
   try {
@@ -217,6 +224,9 @@ async function createCheckoutOrderImpl(
   options: CheckoutOptions = {}
 ) {
   const shipping = validateShipping(rawShipping);
+  if ((await checkPincode(shipping.postalCode)).status === "unserviceable") {
+    throw new UserError("Sorry, we can't deliver to that PIN code yet. Please check it, or contact us.");
+  }
   // From the session cookie, never from the request body
   const customer = await getCurrentCustomer();
   const lines = normaliseLines(cartItems);

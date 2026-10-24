@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireCustomer } from "@/lib/customer-auth";
 import { formatINR } from "@/lib/format";
+import { isDelhivery, trackShipment } from "@/lib/delhivery";
 import { formatIndianPhone } from "@/lib/phone";
 import { CustomerStatusBadge, PROGRESS_STEPS, progressIndex } from "@/lib/order-display";
 
@@ -38,6 +39,7 @@ export default async function AccountOrderDetailPage(props: PageProps<"/account/
     postalCode: string;
     country: string;
   };
+  const live = order.trackingNumber && isDelhivery(order.courier) ? await trackShipment(order.trackingNumber) : null;
   const step = progressIndex(order.status);
   const showProgress = step >= 0;
   const terminal = order.status === "CANCELLED" || order.status === "REFUNDED";
@@ -143,6 +145,32 @@ export default async function AccountOrderDetailPage(props: PageProps<"/account/
             {order.courier ? <>Shipped with <strong className="font-medium text-ink">{order.courier}</strong>. </> : null}
             {order.trackingNumber ? <>Tracking number <span className="font-mono">{order.trackingNumber}</span>.</> : null}
           </p>
+          {live?.ok ? (
+            <div className="mt-4 border-t border-gold/25 pt-4">
+              <p className="text-sm text-ink">
+                <strong className="font-medium">{live.status}</strong>
+                {live.location ? <span className="text-ink/60"> &middot; {live.location}</span> : null}
+              </p>
+              {live.expectedDelivery ? (
+                <p className="mt-1 text-sm text-ink/60">
+                  Expected by {new Date(live.expectedDelivery).toLocaleDateString("en-IN", { day: "numeric", month: "long" })}
+                </p>
+              ) : null}
+              {live.events.length > 0 ? (
+                <ol className="mt-4 space-y-3 border-l border-gold/40 pl-4">
+                  {live.events.map((ev, i) => (
+                    <li key={i} className="relative text-sm">
+                      <span className={`absolute -left-[21px] top-1.5 h-2 w-2 rounded-full ${i === 0 ? "bg-forest" : "bg-gold/60"}`} aria-hidden />
+                      <span className="block text-ink">{ev.status}</span>
+                      <span className="block text-xs text-ink/50">
+                        {[ev.location, ev.at ? new Date(ev.at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : ""].filter(Boolean).join(" · ")}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
+            </div>
+          ) : null}
           {order.trackingUrl ? (
             <a
               href={order.trackingUrl}
