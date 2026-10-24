@@ -8,8 +8,14 @@ import sharp from "sharp";
 // and are served by app/media/[...path]. Set UPLOADS_DIR to a folder that survives
 // deployments (hosts that deploy each build into a fresh folder would otherwise lose
 // them); without it they go in <project>/uploads (gitignored), which is fine locally.
+// On Hostinger each build runs from <site folder>/hbuilds/versions/<id>/..., so the
+// permanent folder is found from there, and keeps working when the site's domain
+// (and so its folder name) changes.
 function uploadsRoot() {
-  return process.env.UPLOADS_DIR || path.join(process.cwd(), "uploads");
+  if (process.env.UPLOADS_DIR) return process.env.UPLOADS_DIR;
+  const hosted = process.cwd().match(/^(.*[\\/]domains[\\/][^\\/]+)[\\/]hbuilds[\\/]/);
+  if (hosted) return path.join(hosted[1], "shared-uploads");
+  return path.join(process.cwd(), "uploads");
 }
 
 export function uploadPath(kind: UploadKind, name?: string) {
