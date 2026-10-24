@@ -1,9 +1,13 @@
 "use client";
 
 import { useSubmit } from "@/lib/use-submit";
-import Link from "next/link";
 import { useActionState } from "react";
-import { Field, FormError, INDIAN_STATES, PrimaryButton } from "../../ui";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import MenuItem from "@mui/material/MenuItem";
+import { LinkButton } from "@/components/ui/link-button";
+import { FormAlert, SelectInput, SubmitButton, TextInput } from "@/components/ui/fields";
+import { INDIAN_STATES } from "../../ui";
 import type { FormState } from "../actions";
 
 export type AddressInitial = {
@@ -33,62 +37,40 @@ export function AddressForm({
 
   return (
     <form onSubmit={onSubmit} className="mt-8 grid max-w-2xl gap-6 sm:grid-cols-2" noValidate>
-      <Field label="Label" error={e.label} hint="e.g. Home, Work" className="sm:col-span-2">
-        <input name="label" defaultValue={initial?.label ?? "Home"} maxLength={30} />
-      </Field>
-      <Field label="Recipient name" error={e.fullName}>
-        <input name="fullName" required defaultValue={initial?.fullName} autoComplete="name" />
-      </Field>
-      <Field label="Mobile number" error={e.phone}>
-        <input name="phone" type="tel" required defaultValue={initial?.phone} autoComplete="tel" inputMode="tel" placeholder="98765 43210" />
-      </Field>
-      <Field label="Address" error={e.line1} className="sm:col-span-2">
-        <input name="line1" required defaultValue={initial?.line1} autoComplete="address-line1" />
-      </Field>
-      <Field label="Apartment, landmark (optional)" className="sm:col-span-2">
-        <input name="line2" defaultValue={initial?.line2 ?? ""} autoComplete="address-line2" />
-      </Field>
-      <Field label="City" error={e.city}>
-        <input name="city" required defaultValue={initial?.city} autoComplete="address-level2" />
-      </Field>
-      <Field label="State" error={e.state}>
-        <select name="state" required defaultValue={initial?.state ?? ""} autoComplete="address-level1">
-          <option value="" disabled>
-            Choose a state
-          </option>
-          {INDIAN_STATES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="PIN code" error={e.postalCode}>
-        <input name="postalCode" required defaultValue={initial?.postalCode} inputMode="numeric" maxLength={6} autoComplete="postal-code" />
-      </Field>
-      <div className="flex items-end pb-2">
-        <label className="flex items-center gap-2.5 text-sm text-ink">
-          <input
-            type="checkbox"
-            name="isDefault"
-            defaultChecked={initial?.isDefault || isFirst}
-            disabled={initial?.isDefault}
-            className="h-4 w-4 accent-forest"
-          />
-          Use as my default address
-        </label>
+      <TextInput label="Label" name="label" error={e.label} hint="e.g. Home, Work" defaultValue={initial?.label ?? "Home"} htmlInput={{ maxLength: 30 }} sx={{ gridColumn: { sm: "1 / -1" } }} />
+      <TextInput label="Recipient name" name="fullName" required error={e.fullName} defaultValue={initial?.fullName} htmlInput={{ autoComplete: "name" }} />
+      <TextInput label="Mobile number" name="phone" type="tel" required error={e.phone} defaultValue={initial?.phone} placeholder="98765 43210" htmlInput={{ autoComplete: "tel", inputMode: "tel" }} />
+      <TextInput label="Address" name="line1" required error={e.line1} defaultValue={initial?.line1} htmlInput={{ autoComplete: "address-line1" }} sx={{ gridColumn: { sm: "1 / -1" } }} />
+      <TextInput label="Apartment, landmark (optional)" name="line2" defaultValue={initial?.line2 ?? ""} htmlInput={{ autoComplete: "address-line2" }} sx={{ gridColumn: { sm: "1 / -1" } }} />
+      <TextInput label="City" name="city" required error={e.city} defaultValue={initial?.city} htmlInput={{ autoComplete: "address-level2" }} />
+      <SelectInput label="State" name="state" required error={e.state} defaultValue={initial?.state ?? ""}>
+        <MenuItem value="" disabled>
+          Choose a state
+        </MenuItem>
+        {INDIAN_STATES.map((s) => (
+          <MenuItem key={s} value={s}>
+            {s}
+          </MenuItem>
+        ))}
+      </SelectInput>
+      <TextInput label="PIN code" name="postalCode" required error={e.postalCode} defaultValue={initial?.postalCode} htmlInput={{ inputMode: "numeric", maxLength: 6, autoComplete: "postal-code" }} />
+      <div className="flex items-end">
+        <FormControlLabel
+          control={<Checkbox name="isDefault" defaultChecked={initial?.isDefault || isFirst} disabled={initial?.isDefault} />}
+          label="Use as my default address"
+        />
         {initial?.isDefault ? <input type="hidden" name="isDefault" value="on" /> : null}
       </div>
 
       <div className="sm:col-span-2">
-        <FormError>{state.error}</FormError>
-        <div className="mt-2 flex items-center gap-5">
-          <PrimaryButton pending={pending} pendingText="Saving...">
+        <FormAlert>{state.error}</FormAlert>
+        <div className="mt-2 flex items-center gap-4">
+          <SubmitButton pending={pending} pendingText="Saving...">
             Save address
-          </PrimaryButton>
-          <Link href="/account/addresses" className="text-sm text-ink/55 hover:text-ink">
+          </SubmitButton>
+          <LinkButton href="/account/addresses" color="inherit" variant="text" size="small">
             Cancel
-          </Link>
+          </LinkButton>
         </div>
       </div>
     </form>

@@ -4,6 +4,7 @@ import { getActiveProducts, type ProductSort } from "@/lib/products";
 import { CATEGORIES } from "@/lib/site-content";
 import { ProductCard, ProductGridSkeleton } from "@/components/product-card";
 import { Reveal } from "@/components/reveal";
+import { ShopFilters } from "./shop-filters";
 
 export default function ProductsPage(props: PageProps<"/products">) {
   return (
@@ -47,65 +48,17 @@ async function Shop({
         </h1>
       </header>
 
-      <form method="get" action="/products" className="mx-auto mt-10 grid max-w-3xl gap-3 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end">
-        {category ? <input type="hidden" name="category" value={category.slug} /> : null}
-        <label className="block border-b border-ink/20 pb-1 focus-within:border-forest">
-          <span className="block text-[10px] uppercase tracking-[0.14em] text-ink/50">Search</span>
-          <input
-            type="search"
-            name="q"
-            defaultValue={search}
-            placeholder="Necklace, pearl, ring..."
-            className="w-full bg-transparent py-1.5 text-sm outline-none"
-          />
-        </label>
-        <div className="flex gap-2">
-          <label className="block w-24 border-b border-ink/20 pb-1 focus-within:border-forest">
-            <span className="block text-[10px] uppercase tracking-[0.14em] text-ink/50">Min ₹</span>
-            <input type="number" name="min" min={0} defaultValue={minPrice} className="w-full bg-transparent py-1.5 text-sm outline-none" />
-          </label>
-          <label className="block w-24 border-b border-ink/20 pb-1 focus-within:border-forest">
-            <span className="block text-[10px] uppercase tracking-[0.14em] text-ink/50">Max ₹</span>
-            <input type="number" name="max" min={0} defaultValue={maxPrice} className="w-full bg-transparent py-1.5 text-sm outline-none" />
-          </label>
-        </div>
-        <label className="block border-b border-ink/20 pb-1 focus-within:border-forest">
-          <span className="block text-[10px] uppercase tracking-[0.14em] text-ink/50">Sort</span>
-          <select name="sort" defaultValue={sort} className="w-full bg-transparent py-1.5 text-sm outline-none">
-            <option value="new">Newest</option>
-            <option value="price-asc">Price: low to high</option>
-            <option value="price-desc">Price: high to low</option>
-            <option value="name">Name A-Z</option>
-          </select>
-        </label>
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            className="rounded-full bg-forest px-6 py-2.5 text-[11px] uppercase tracking-[0.16em] text-cream hover:bg-forest-deep"
-          >
-            Apply
-          </button>
-          {filtered || sort !== "new" ? (
-            <Link href={category ? `/products?category=${category.slug}` : "/products"} className="text-[11px] uppercase tracking-[0.14em] text-ink/50 hover:text-forest">
-              Clear
-            </Link>
-          ) : null}
-        </div>
-      </form>
-
-      <nav
-        aria-label="Filter by category"
-        className="-mx-5 mt-10 flex gap-2 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:px-0"
-      >
-        <FilterPill href="/products" active={!category}>
-          All
-        </FilterPill>
-        {CATEGORIES.map((c) => (
-          <FilterPill key={c.slug} href={`/products?category=${c.slug}`} active={category?.slug === c.slug}>
-            {c.label}
-          </FilterPill>
-        ))}
-      </nav>
+      <ShopFilters
+        key={[category?.slug ?? '', search ?? '', minPrice ?? '', maxPrice ?? '', sort].join('|')}
+        categories={CATEGORIES.map((c) => ({ slug: c.slug, label: c.label }))}
+        initial={{
+          q: search ?? '',
+          min: minPrice !== undefined ? String(minPrice) : '',
+          max: maxPrice !== undefined ? String(maxPrice) : '',
+          sort,
+          category: category?.slug ?? '',
+        }}
+      />
 
       {products.length === 0 ? (
         <div className="mx-auto mt-20 max-w-sm text-center">
@@ -131,31 +84,6 @@ async function Shop({
         </div>
       )}
     </>
-  );
-}
-
-function FilterPill({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      scroll={false}
-      aria-current={active ? "page" : undefined}
-      className={`shrink-0 rounded-full border px-5 py-2 text-[11px] uppercase tracking-[0.16em] transition-colors duration-300 ${
-        active
-          ? "border-forest bg-forest text-cream"
-          : "border-forest/20 text-forest hover:border-forest/60"
-      }`}
-    >
-      {children}
-    </Link>
   );
 }
 

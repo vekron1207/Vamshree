@@ -9,6 +9,12 @@ import { usePriceSync } from "../use-price-sync";
 import { useShippingRule } from "../use-shipping-rule";
 import { amountToFreeShipping, shippingFor } from "@/lib/shipping";
 import { formatINR } from "@/lib/format";
+import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
+import Collapse from "@mui/material/Collapse";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import { FormAlert, SubmitButton, TextInput } from "@/components/ui/fields";
+import { LinkButton } from "@/components/ui/link-button";
 import {
   createCheckoutOrder,
   loadCheckoutPrefill,
@@ -193,12 +199,9 @@ export default function CheckoutPage() {
     return (
       <div className="mx-auto max-w-md px-6 py-24 text-center">
         <p className="font-tagline text-xl italic text-ink/70">Your bag is empty.</p>
-        <Link
-          href="/products"
-          className="mt-8 inline-block rounded-full bg-forest px-9 py-3.5 text-[12px] uppercase tracking-[0.18em] text-cream"
-        >
+        <LinkButton href="/products" variant="contained" size="large" sx={{ mt: 4 }}>
           Shop jewellery
-        </Link>
+        </LinkButton>
       </div>
     );
   }
@@ -232,15 +235,9 @@ export default function CheckoutPage() {
           <fieldset>
             <legend className="text-[11px] uppercase tracking-[0.22em] text-gold">Contact</legend>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <Field label="Full name" className="sm:col-span-2">
-                <input required autoComplete="name" value={form.name} onChange={(e) => update("name", e.target.value)} />
-              </Field>
-              <Field label="Email">
-                <input required type="email" autoComplete="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
-              </Field>
-              <Field label="Mobile number">
-                <input required type="tel" autoComplete="tel" inputMode="tel" placeholder="98765 43210" value={form.phone} onChange={(e) => update("phone", e.target.value)} />
-              </Field>
+              <TextInput label="Full name" required value={form.name} onChange={(e) => update("name", e.target.value)} htmlInput={{ autoComplete: "name" }} sx={{ gridColumn: { sm: "1 / -1" } }} />
+              <TextInput label="Email" required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} htmlInput={{ autoComplete: "email" }} />
+              <TextInput label="Mobile number" required type="tel" placeholder="98765 43210" value={form.phone} onChange={(e) => update("phone", e.target.value)} htmlInput={{ autoComplete: "tel", inputMode: "tel" }} />
             </div>
           </fieldset>
 
@@ -274,76 +271,49 @@ export default function CheckoutPage() {
               </div>
             ) : null}
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <Field label="Address" className="sm:col-span-2">
-                <input required autoComplete="address-line1" value={form.line1} onChange={(e) => update("line1", e.target.value)} />
-              </Field>
-              <Field label="Apartment, landmark (optional)" className="sm:col-span-2">
-                <input autoComplete="address-line2" value={form.line2} onChange={(e) => update("line2", e.target.value)} />
-              </Field>
-              <Field label="City">
-                <input required autoComplete="address-level2" value={form.city} onChange={(e) => update("city", e.target.value)} />
-              </Field>
-              <Field label="State">
-                <input required autoComplete="address-level1" value={form.state} onChange={(e) => update("state", e.target.value)} />
-              </Field>
-              <Field label="PIN code">
-                <input required inputMode="numeric" autoComplete="postal-code" value={form.postalCode} onChange={(e) => update("postalCode", e.target.value)} />
-              </Field>
-              <Field label="Country">
-                <input readOnly aria-readonly="true" autoComplete="country-name" value="India" className="text-ink/60" />
-              </Field>
+              <TextInput label="Address" required value={form.line1} onChange={(e) => update("line1", e.target.value)} htmlInput={{ autoComplete: "address-line1" }} sx={{ gridColumn: { sm: "1 / -1" } }} />
+              <TextInput label="Apartment, landmark (optional)" value={form.line2} onChange={(e) => update("line2", e.target.value)} htmlInput={{ autoComplete: "address-line2" }} sx={{ gridColumn: { sm: "1 / -1" } }} />
+              <TextInput label="City" required value={form.city} onChange={(e) => update("city", e.target.value)} htmlInput={{ autoComplete: "address-level2" }} />
+              <TextInput label="State" required value={form.state} onChange={(e) => update("state", e.target.value)} htmlInput={{ autoComplete: "address-level1" }} />
+              <TextInput label="PIN code" required value={form.postalCode} onChange={(e) => update("postalCode", e.target.value)} htmlInput={{ inputMode: "numeric", autoComplete: "postal-code" }} />
+              <TextInput label="Country" value="India" disabled htmlInput={{ readOnly: true, "aria-readonly": "true", autoComplete: "country-name" }} />
             </div>
             {prefill && selectedAddress === null ? (
-              <label className="mt-5 flex items-center gap-2.5 text-sm text-ink">
-                <input
-                  type="checkbox"
-                  checked={saveAddress}
-                  onChange={(e) => setSaveAddress(e.target.checked)}
-                  className="h-4 w-4 accent-forest"
-                />
-                Save this address to my account
-              </label>
+              <FormControlLabel
+                sx={{ mt: 2 }}
+                control={<Checkbox checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} />}
+                label="Save this address to my account"
+              />
             ) : null}
           </fieldset>
 
           <fieldset className="mt-10">
             <legend className="text-[11px] uppercase tracking-[0.22em] text-gold">Gift options</legend>
-            <label className="mt-5 flex items-center gap-2.5 text-sm text-ink">
-              <input
-                type="checkbox"
-                checked={isGift}
-                onChange={(e) => setIsGift(e.target.checked)}
-                className="h-4 w-4 accent-forest"
+            <FormControlLabel
+              sx={{ mt: 2 }}
+              control={<Checkbox checked={isGift} onChange={(e) => setIsGift(e.target.checked)} />}
+              label="This is a gift (no prices on the packing slip, gift-wrapped)"
+            />
+            <Collapse in={isGift} unmountOnExit>
+              <TextInput
+                label="Gift message (optional)"
+                multiline
+                minRows={3}
+                value={giftMessage}
+                onChange={(e) => setGiftMessage(e.target.value)}
+                htmlInput={{ maxLength: 300 }}
+                sx={{ mt: 2 }}
               />
-              This is a gift (no prices on the packing slip, gift-wrapped)
-            </label>
-            {isGift ? (
-              <label className="mt-4 block border-b border-ink/20 pb-1 focus-within:border-forest">
-                <span className="block text-[11px] uppercase tracking-[0.12em] text-ink/50">Gift message (optional)</span>
-                <textarea
-                  rows={3}
-                  maxLength={300}
-                  value={giftMessage}
-                  onChange={(e) => setGiftMessage(e.target.value)}
-                  className="w-full resize-none bg-transparent py-1.5 text-ink outline-none"
-                />
-              </label>
-            ) : null}
+            </Collapse>
           </fieldset>
 
-          {error ? (
-            <p role="alert" className="mt-6 border-l-2 border-terracotta bg-terracotta/5 px-4 py-3 text-sm text-terracotta">
-              {error}
-            </p>
-          ) : null}
+          <div className="mt-6">
+            <FormAlert>{error}</FormAlert>
+          </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="mt-10 w-full rounded-full bg-forest px-8 py-4 text-[12px] uppercase tracking-[0.18em] text-cream transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-forest-deep disabled:translate-y-0 disabled:opacity-60"
-          >
-            {submitting ? "Opening secure payment..." : `Pay ${formatINR(total)}`}
-          </button>
+          <SubmitButton pending={submitting} pendingText="Opening secure payment..." size="large" fullWidth sx={{ mt: 5 }}>
+            {`Pay ${formatINR(total)}`}
+          </SubmitButton>
           <p className="mt-3 text-center text-xs text-ink/50">
             Payment is processed securely by Razorpay.
           </p>
@@ -377,21 +347,21 @@ export default function CheckoutPage() {
                 <span>
                   Code <strong>{discount.code}</strong> applied ({discount.description})
                 </span>
-                <button
-                  type="button"
+                <Button
+                  size="small"
+                  color="inherit"
                   onClick={() => {
                     setDiscount(null);
                     setCodeInput("");
                   }}
-                  className="text-[11px] uppercase tracking-[0.14em] text-ink/50 hover:text-terracotta"
                 >
                   Remove
-                </button>
+                </Button>
               </p>
             ) : (
               <div>
-                <div className="flex gap-2">
-                  <input
+                <div className="flex items-end gap-3">
+                  <TextInput
                     value={codeInput}
                     onChange={(e) => setCodeInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -400,25 +370,14 @@ export default function CheckoutPage() {
                         if (codeInput.trim()) void applyCode();
                       }
                     }}
-                    placeholder="Discount code"
-                    aria-label="Discount code"
-                    autoCapitalize="characters"
-                    className="min-w-0 flex-1 border-b border-ink/20 bg-transparent py-2 text-sm uppercase outline-none focus:border-forest"
+                    label="Discount code"
+                    error={codeError ?? undefined}
+                    htmlInput={{ "aria-label": "Discount code", autoCapitalize: "characters", style: { textTransform: "uppercase" } }}
                   />
-                  <button
-                    type="button"
-                    disabled={codeBusy || !codeInput.trim()}
-                    onClick={applyCode}
-                    className="rounded-full border border-forest px-5 py-2 text-[11px] uppercase tracking-[0.16em] text-forest transition-colors hover:bg-forest hover:text-cream disabled:opacity-40"
-                  >
+                  <Button variant="outlined" size="small" disabled={codeBusy || !codeInput.trim()} onClick={applyCode} sx={{ flexShrink: 0, mb: 0.5 }}>
                     {codeBusy ? "..." : "Apply"}
-                  </button>
+                  </Button>
                 </div>
-                {codeError ? (
-                  <p role="alert" className="mt-2 text-sm text-terracotta">
-                    {codeError}
-                  </p>
-                ) : null}
               </div>
             )}
           </div>
@@ -446,26 +405,5 @@ export default function CheckoutPage() {
         </aside>
       </div>
     </div>
-  );
-}
-
-function Field({
-  label,
-  className = "",
-  children,
-}: {
-  label: string;
-  className?: string;
-  children: React.ReactElement;
-}) {
-  return (
-    <label
-      className={`block border-b border-ink/20 pb-1 transition-colors focus-within:border-forest ${className}`}
-    >
-      <span className="block text-[11px] uppercase tracking-[0.12em] text-ink/50">{label}</span>
-      <span className="block [&>input]:w-full [&>input]:bg-transparent [&>input]:py-1.5 [&>input]:text-ink [&>input]:outline-none">
-        {children}
-      </span>
-    </label>
   );
 }

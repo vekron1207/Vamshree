@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Aboreto, Adamina, Roboto } from "next/font/google";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site-url";
+import { MuiProvider } from "@/components/mui-provider";
 
 const aboreto = Aboreto({
   variable: "--font-aboreto",
@@ -36,7 +37,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${aboreto.variable} ${adamina.variable} ${roboto.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <MuiProvider>{children}</MuiProvider>
+      </body>
     </html>
   );
 }

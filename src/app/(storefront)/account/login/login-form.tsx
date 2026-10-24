@@ -4,7 +4,7 @@ import { useSubmit } from "@/lib/use-submit";
 import Link from "next/link";
 import { useActionState } from "react";
 import { loginAction, type AuthState } from "../auth-actions";
-import { Field, FormError, PrimaryButton } from "../ui";
+import { FormAlert, SubmitButton, TextInput } from "@/components/ui/fields";
 
 export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(loginAction, {});
@@ -13,16 +13,12 @@ export function LoginForm({ next }: { next: string }) {
   return (
     <form onSubmit={onSubmit} className="mt-10 space-y-6">
       <input type="hidden" name="next" value={next} />
-      <Field label="Email or mobile number">
-        <input name="identifier" required autoComplete="username" autoFocus />
-      </Field>
-      <Field label="Password">
-        <input name="password" type="password" required autoComplete="current-password" />
-      </Field>
-      <FormError>{state.error}</FormError>
-      <PrimaryButton pending={pending} pendingText="Signing in..." className="w-full">
+      <TextInput label="Email or mobile number" name="identifier" required autoFocus htmlInput={{ autoComplete: "username" }} />
+      <TextInput label="Password" name="password" type="password" required htmlInput={{ autoComplete: "current-password" }} />
+      <FormAlert>{state.error}</FormAlert>
+      <SubmitButton pending={pending} pendingText="Signing in..." size="large" fullWidth>
         Sign in
-      </PrimaryButton>
+      </SubmitButton>
       <p className="text-center text-sm text-ink/60">
         New to Vaamshri?{" "}
         <Link

@@ -2,7 +2,7 @@
 
 import { useSubmit } from "@/lib/use-submit";
 import { useActionState } from "react";
-import { Field, FormError, PrimaryButton } from "../../ui";
+import { FormAlert, SubmitButton, TextInput } from "@/components/ui/fields";
 import { changePasswordAction, updateProfileAction, type FormState } from "../actions";
 
 function Saved({ at }: { at?: number }) {
@@ -20,20 +20,14 @@ export function ProfileForm({ name, email, phone }: { name: string; email: strin
   const e = state.fieldErrors ?? {};
   return (
     <form onSubmit={onSubmit} className="mt-6 grid max-w-xl gap-6" noValidate>
-      <Field label="Full name" error={e.name}>
-        <input name="name" required defaultValue={name} autoComplete="name" />
-      </Field>
-      <Field label="Email" error={e.email}>
-        <input name="email" type="email" required defaultValue={email} autoComplete="email" />
-      </Field>
-      <Field label="Mobile number" error={e.phone} hint="10-digit Indian number.">
-        <input name="phone" type="tel" required defaultValue={phone} autoComplete="tel" inputMode="tel" />
-      </Field>
-      <FormError>{state.error}</FormError>
+      <TextInput label="Full name" name="name" required error={e.name} defaultValue={name} htmlInput={{ autoComplete: "name" }} />
+      <TextInput label="Email" name="email" type="email" required error={e.email} defaultValue={email} htmlInput={{ autoComplete: "email" }} />
+      <TextInput label="Mobile number" name="phone" type="tel" required error={e.phone} hint="10-digit Indian number." defaultValue={phone} htmlInput={{ autoComplete: "tel", inputMode: "tel" }} />
+      <FormAlert>{state.error}</FormAlert>
       <div className="flex items-center gap-5">
-        <PrimaryButton pending={pending} pendingText="Saving...">
+        <SubmitButton pending={pending} pendingText="Saving...">
           Save details
-        </PrimaryButton>
+        </SubmitButton>
         {!pending ? <Saved at={state.saved} /> : null}
       </div>
     </form>
@@ -46,20 +40,14 @@ export function PasswordForm() {
   const e = state.fieldErrors ?? {};
   return (
     <form onSubmit={onSubmit} className="mt-6 grid max-w-xl gap-6" noValidate key={state.saved ?? "form"}>
-      <Field label="Current password" error={e.current}>
-        <input name="current" type="password" required autoComplete="current-password" />
-      </Field>
-      <Field label="New password" error={e.next} hint="At least 8 characters, with a letter and a number.">
-        <input name="next" type="password" required autoComplete="new-password" />
-      </Field>
-      <Field label="Confirm new password" error={e.confirm}>
-        <input name="confirm" type="password" required autoComplete="new-password" />
-      </Field>
-      <FormError>{state.error}</FormError>
+      <TextInput label="Current password" name="current" type="password" required error={e.current} htmlInput={{ autoComplete: "current-password" }} />
+      <TextInput label="New password" name="next" type="password" required error={e.next} hint="At least 8 characters, with a letter and a number." htmlInput={{ autoComplete: "new-password" }} />
+      <TextInput label="Confirm new password" name="confirm" type="password" required error={e.confirm} htmlInput={{ autoComplete: "new-password" }} />
+      <FormAlert>{state.error}</FormAlert>
       <div className="flex items-center gap-5">
-        <PrimaryButton pending={pending} pendingText="Updating...">
+        <SubmitButton pending={pending} pendingText="Updating...">
           Change password
-        </PrimaryButton>
+        </SubmitButton>
         {!pending && state.saved ? <span role="status" className="text-sm text-emerald-700">Password updated &#10003;</span> : null}
       </div>
     </form>
