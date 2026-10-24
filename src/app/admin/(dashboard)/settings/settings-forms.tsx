@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { useSubmit } from "@/lib/use-submit";
-import type { Announcement, BusinessInfo, StoreSettings } from "@/lib/settings";
+import type { Announcement, AnnouncementItem, BusinessInfo, StoreSettings } from "@/lib/settings";
 import type { ShippingRule } from "@/lib/shipping";
 import { saveAnnouncement, saveBusiness, saveShipping, saveStore, type SettingsResult } from "./actions";
 
@@ -123,22 +123,65 @@ export function StoreCard({ store }: { store: StoreSettings }) {
 }
 
 export function AnnouncementCard({ announcement }: { announcement: Announcement }) {
+  const [items, setItems] = useState<AnnouncementItem[]>(
+    announcement.items.length > 0 ? announcement.items : [{ text: "", code: "", link: "" }]
+  );
+  const update = (i: number, patch: Partial<AnnouncementItem>) =>
+    setItems((list) => list.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+
   return (
     <SettingsCard
       title="Announcement bar"
-      description="A slim message above the header on every page. When it is off, the bar shows your best running collection sale automatically."
+      description="Slim messages above the header on every page, such as a sale or a coupon code. Switched off, the bar shows your best running collection sale automatically."
       action={saveAnnouncement}
     >
+      <input type="hidden" name="items" value={JSON.stringify(items)} />
       <label className="flex items-center gap-2.5 text-sm text-ink sm:col-span-2">
         <input type="checkbox" name="enabled" defaultChecked={announcement.enabled} className="h-4 w-4 accent-forest" />
-        Show my own message
+        Show these messages
       </label>
-      <Field label="Message" hint="Up to 140 characters, e.g. Free shipping on orders above Rs 2,999" className="sm:col-span-2">
-        <input name="text" maxLength={140} defaultValue={announcement.text} className={inputClass} />
-      </Field>
-      <Field label="Link (optional)" hint="Where the bar goes when clicked, e.g. /products or /collections/golden-hour-story" className="sm:col-span-2">
-        <input name="link" defaultValue={announcement.link} className={inputClass} />
-      </Field>
+      {items.map((item, i) => (
+        <div key={i} className="grid gap-3 rounded-xl border border-ink/10 p-4 sm:col-span-2 sm:grid-cols-[1fr_9rem]">
+          <Field label={`Message ${i + 1}`} hint="Up to 140 characters, e.g. Festive Season Sale" className="sm:col-span-2">
+            <input
+              value={item.text}
+              maxLength={140}
+              onChange={(e) => update(i, { text: e.target.value })}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Coupon code (optional)" hint="Shown as a tap-to-copy badge after the message">
+            <input
+              value={item.code}
+              maxLength={24}
+              onChange={(e) => update(i, { code: e.target.value.toUpperCase() })}
+              placeholder="VSFAM20"
+              className={`${inputClass} uppercase`}
+            />
+          </Field>
+          <Field label="Link (optional)" hint="/products or /collections/golden-hour-story">
+            <input value={item.link} onChange={(e) => update(i, { link: e.target.value })} className={inputClass} />
+          </Field>
+          {items.length > 1 ? (
+            <button
+              type="button"
+              onClick={() => setItems((list) => list.filter((_, j) => j !== i))}
+              className="justify-self-start text-xs text-rose-700 hover:underline sm:col-span-2"
+            >
+              Remove this message
+            </button>
+          ) : null}
+        </div>
+      ))}
+      {items.length < 4 ? (
+        <button
+          type="button"
+          onClick={() => setItems((list) => [...list, { text: "", code: "", link: "" }])}
+          className="justify-self-start rounded-full border border-forest/30 px-4 py-1.5 text-xs text-forest hover:bg-forest hover:text-cream sm:col-span-2"
+        >
+          + Add a message
+        </button>
+      ) : null}
     </SettingsCard>
   );
 }

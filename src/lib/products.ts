@@ -25,6 +25,9 @@ type CardSource = {
   name: string;
   price: unknown;
   compareAtPrice: unknown;
+  discountPercent: number | null;
+  discountStartsAt: Date | null;
+  discountEndsAt: Date | null;
   stock: number;
   _count?: { variants: number };
   images: { url: string }[];
@@ -35,7 +38,8 @@ function toCard(p: CardSource, withEyebrow: boolean): ProductCardData {
   const pricing = priceFor(
     Number(p.price),
     p.compareAtPrice ? Number(p.compareAtPrice) : null,
-    p.collection
+    p.collection,
+    p
   );
   return {
     id: p.id,
@@ -116,7 +120,8 @@ export async function getProductBySlug(slug: string) {
   const pricing = priceFor(
     Number(product.price),
     product.compareAtPrice ? Number(product.compareAtPrice) : null,
-    product.collection
+    product.collection,
+    product
   );
   return { ...product, pricing };
 }

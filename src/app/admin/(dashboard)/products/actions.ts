@@ -28,6 +28,28 @@ function parseImages(raw: FormDataEntryValue | null): string[] {
   return urls;
 }
 
+// Date inputs are calendar days in India time (the shop's time zone)
+function istDate(raw: FormDataEntryValue | null, endOfDay: boolean): Date | null {
+  const v = String(raw ?? "").trim();
+  if (!v) return null;
+  const d = new Date(`${v}T${endOfDay ? "23:59:59" : "00:00:00"}+05:30`);
+  if (Number.isNaN(d.getTime())) throw new Error("Check the discount dates.");
+  return d;
+}
+
+function parseDiscount(formData: FormData) {
+  const raw = String(formData.get("discountPercent") ?? "").trim();
+  const discountStartsAt = istDate(formData.get("discountStartsAt"), false);
+  const discountEndsAt = istDate(formData.get("discountEndsAt"), true);
+  if (!raw) return { discountPercent: null, discountStartsAt: null, discountEndsAt: null };
+  const pct = Number(raw);
+  if (!Number.isInteger(pct) || pct < 1 || pct > 90) throw new Error("Discount must be a whole number from 1 to 90.");
+  if (discountStartsAt && discountEndsAt && discountEndsAt < discountStartsAt) {
+    throw new Error("The discount ends before it starts.");
+  }
+  return { discountPercent: pct, discountStartsAt, discountEndsAt };
+}
+
 type VariantInput = { id?: string; label: string; stock: number };
 
 function parseVariants(raw: FormDataEntryValue | null): VariantInput[] {
@@ -61,6 +83,7 @@ function parseProductForm(formData: FormData) {
   const sku = String(formData.get("sku") ?? "").trim();
   const images = parseImages(formData.get("images"));
   const variants = parseVariants(formData.get("variants"));
+  const discount = parseDiscount(formData);
   const isFeatured = formData.get("isFeatured") === "on";
   const isActive = formData.get("isActive") === "on";
   const categoryId = String(formData.get("categoryId") ?? "").trim();
@@ -84,6 +107,7 @@ function parseProductForm(formData: FormData) {
       isActive,
       categoryId: categoryId || null,
       collectionId: collectionId || null,
+      ...discount,
     },
     images,
     variants,
@@ -111,8 +135,13 @@ export async function createProduct(
         variants: { create: data.variants.map((v, position) => ({ label: v.label, stock: v.stock, position })) },
       },
     });
-  } catch {
-    return { error: "A product with that slug or SKU already exists" };
+  } catch (err) {
+    // Only a unique-constraint clash means "already exists"; anything else is a real fault
+    if ((err as { code?: string })?.code === "P2002") {
+      return { error: "A product with that slug or SKU already exists" };
+    }
+    console.error("Saving product failed:", err);
+    return { error: "Couldn't save this product. Please try again." };
   }
 
   updateTag("products");
@@ -157,8 +186,13 @@ export async function updateProduct(
         await tx.productVariant.create({ data: { productId: id, label: v.label, stock: v.stock, position } });
       }
     });
-  } catch {
-    return { error: "A product with that slug or SKU already exists" };
+  } catch (err) {
+    // Only a unique-constraint clash means "already exists"; anything else is a real fault
+    if ((err as { code?: string })?.code === "P2002") {
+      return { error: "A product with that slug or SKU already exists" };
+    }
+    console.error("Saving product failed:", err);
+    return { error: "Couldn't save this product. Please try again." };
   }
 
   updateTag("products");
@@ -215,4 +249,50 @@ export async function bulkSetProductPrice(
   updateTag("products");
   revalidatePath("/admin/products");
   return { ok: true, updated: count, madeLive: live.count };
+}
+
+export type BulkDiscountResult = { ok: true; updated: number } | { ok: false; error: string };
+
+// Same discount on many products at once; percent null removes it
+export async function bulkSetProductDiscount(
+  ids: string[],
+  percent: number | null,
+  startsOn: string,
+  endsOn: string
+): Promise<BulkDiscountResult> {
+  await requireAdmin();
+  if (!Array.isArray(ids) || ids.length === 0) return { ok: false, error: "Select at least one product." };
+  if (ids.length > 500) return { ok: false, error: "Select 500 products or fewer at a time." };
+
+  if (percent === null) {
+    const { count } = await prisma.product.updateMany({
+      where: { id: { in: ids } },
+      data: { discountPercent: null, discountStartsAt: null, discountEndsAt: null },
+    });
+    updateTag("products");
+    revalidatePath("/admin/products");
+    return { ok: true, updated: count };
+  }
+
+  if (!Number.isInteger(percent) || percent < 1 || percent > 90) {
+    return { ok: false, error: "Discount must be a whole number from 1 to 90." };
+  }
+  const parse = (v: string, end: boolean) => {
+    if (!v) return null;
+    const d = new Date(`${v}T${end ? "23:59:59" : "00:00:00"}+05:30`);
+    return Number.isNaN(d.getTime()) ? undefined : d;
+  };
+  const discountStartsAt = parse(startsOn, false);
+  const discountEndsAt = parse(endsOn, true);
+  if (discountStartsAt === undefined || discountEndsAt === undefined) return { ok: false, error: "Check the dates." };
+  if (discountStartsAt && discountEndsAt && discountEndsAt < discountStartsAt) {
+    return { ok: false, error: "The discount ends before it starts." };
+  }
+  const { count } = await prisma.product.updateMany({
+    where: { id: { in: ids } },
+    data: { discountPercent: percent, discountStartsAt, discountEndsAt },
+  });
+  updateTag("products");
+  revalidatePath("/admin/products");
+  return { ok: true, updated: count };
 }

@@ -74,7 +74,8 @@ async function priceLines(lines: { productId: string; variantId: string | null; 
       ? priceFor(
           Number(product.price),
           product.compareAtPrice ? Number(product.compareAtPrice) : null,
-          product.collection
+          product.collection,
+          product
         )
       : null;
     return { line, product, variant, pricing };

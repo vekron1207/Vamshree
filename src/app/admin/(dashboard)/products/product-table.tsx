@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { formatINR } from "@/lib/format";
-import { bulkSetProductPrice, bulkSetProductsActive } from "./actions";
+import { bulkSetProductDiscount, bulkSetProductPrice, bulkSetProductsActive } from "./actions";
 
 export type AdminProductRow = {
   id: string;
@@ -16,9 +16,18 @@ export type AdminProductRow = {
   image: string | null;
   category: string | null;
   collection: string | null;
+  /** The product's own discount, if one is set (active = running right now) */
+  discountPercent: number | null;
+  discountActive: boolean;
 };
 
 type StatusFilter = "all" | "live" | "archived";
+type StockFilter = "all" | "in" | "low" | "out";
+type DiscountFilter = "all" | "on" | "off";
+type SortKey = "newest" | "name" | "price-asc" | "price-desc" | "stock-asc" | "stock-desc";
+
+const selectClass =
+  "rounded-full border border-ink/10 bg-paper px-3.5 py-2 text-sm text-ink outline-none transition-colors focus:border-forest/50";
 
 export function ProductTable({
   products,
@@ -32,6 +41,16 @@ export function ProductTable({
   const router = useRouter();
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
+  const [collection, setCollection] = useState("");
+  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+  const [discountFilter, setDiscountFilter] = useState<DiscountFilter>("all");
+  const [sort, setSort] = useState<SortKey>("newest");
+  const [discOpen, setDiscOpen] = useState(false);
+  const [discPercent, setDiscPercent] = useState("");
+  const [discStart, setDiscStart] = useState("");
+  const [discEnd, setDiscEnd] = useState("");
+  const [discError, setDiscError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [notice, setNotice] = useState<string | null>(null);
   const [priceOpen, setPriceOpen] = useState(false);
@@ -40,6 +59,7 @@ export function ProductTable({
   const [priceError, setPriceError] = useState<string | null>(null);
   // Close the panel whenever the selection empties, so it never reappears uninvited
   if (selected.size === 0 && priceOpen) setPriceOpen(false);
+  if (selected.size === 0 && discOpen) setDiscOpen(false);
   const [pending, startTransition] = useTransition();
   const selectAllRef = useRef<HTMLInputElement>(null);
 
@@ -52,11 +72,21 @@ export function ProductTable({
     [products]
   );
 
+  const categories = useMemo(() => [...new Set(products.map((p) => p.category).filter((c): c is string => Boolean(c)))].sort(), [products]);
+  const collections = useMemo(() => [...new Set(products.map((p) => p.collection).filter((c): c is string => Boolean(c)))].sort(), [products]);
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return products.filter((p) => {
+    const list = products.filter((p) => {
       if (status === "live" && !p.isActive) return false;
       if (status === "archived" && p.isActive) return false;
+      if (category && p.category !== category) return false;
+      if (collection && p.collection !== collection) return false;
+      if (stockFilter === "out" && p.stock !== 0) return false;
+      if (stockFilter === "low" && !(p.stock > 0 && p.stock <= lowStockThreshold)) return false;
+      if (stockFilter === "in" && p.stock <= 0) return false;
+      if (discountFilter === "on" && !p.discountPercent) return false;
+      if (discountFilter === "off" && p.discountPercent) return false;
       if (!q) return true;
       return (
         p.name.toLowerCase().includes(q) ||
@@ -64,7 +94,26 @@ export function ProductTable({
         p.collection?.toLowerCase().includes(q)
       );
     });
-  }, [products, status, query]);
+    const by: Record<SortKey, ((a: AdminProductRow, b: AdminProductRow) => number) | null> = {
+      newest: null,
+      name: (a, b) => a.name.localeCompare(b.name),
+      "price-asc": (a, b) => a.price - b.price,
+      "price-desc": (a, b) => b.price - a.price,
+      "stock-asc": (a, b) => a.stock - b.stock,
+      "stock-desc": (a, b) => b.stock - a.stock,
+    };
+    const cmp = by[sort];
+    return cmp ? [...list].sort(cmp) : list;
+  }, [products, status, query, category, collection, stockFilter, discountFilter, sort, lowStockThreshold]);
+
+  const filtersActive = Boolean(category || collection || stockFilter !== "all" || discountFilter !== "all" || query.trim());
+  function clearFilters() {
+    setCategory("");
+    setCollection("");
+    setStockFilter("all");
+    setDiscountFilter("all");
+    setQuery("");
+  }
 
   const visibleSelected = visible.filter((p) => selected.has(p.id));
   const allVisibleSelected = visible.length > 0 && visibleSelected.length === visible.length;
@@ -135,6 +184,36 @@ export function ProductTable({
     });
   }
 
+  function applyDiscount(remove: boolean) {
+    let percent: number | null = null;
+    if (!remove) {
+      percent = Number(discPercent);
+      if (!discPercent.trim() || !Number.isInteger(percent) || percent < 1 || percent > 90) {
+        setDiscError("Enter a whole number from 1 to 90.");
+        return;
+      }
+    }
+    setDiscError(null);
+    startTransition(async () => {
+      const result = await bulkSetProductDiscount([...selected], percent, discStart, discEnd);
+      if (!result.ok) {
+        setDiscError(result.error);
+        return;
+      }
+      setNotice(
+        percent === null
+          ? `Removed the discount from ${result.updated} ${result.updated === 1 ? "product" : "products"}.`
+          : `${percent}% off set on ${result.updated} ${result.updated === 1 ? "product" : "products"}.`
+      );
+      setSelected(new Set());
+      setDiscOpen(false);
+      setDiscPercent("");
+      setDiscStart("");
+      setDiscEnd("");
+      router.refresh();
+    });
+  }
+
   const selectedProducts = products.filter((p) => selected.has(p.id));
   const distinctPrices = [...new Set(selectedProducts.map((p) => p.price))];
   const canArchive = selectedProducts.some((p) => p.isActive);
@@ -177,7 +256,53 @@ export function ProductTable({
         </label>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl bg-paper shadow-[0_1px_2px_rgba(18,20,15,0.06)]">
+      <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter products">
+        <select aria-label="Category" value={category} onChange={(e) => setCategory(e.target.value)} className={selectClass}>
+          <option value="">All categories</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <select aria-label="Collection" value={collection} onChange={(e) => setCollection(e.target.value)} className={selectClass}>
+          <option value="">All collections</option>
+          {collections.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <select aria-label="Stock" value={stockFilter} onChange={(e) => setStockFilter(e.target.value as StockFilter)} className={selectClass}>
+          <option value="all">Any stock</option>
+          <option value="in">In stock</option>
+          <option value="low">Low stock</option>
+          <option value="out">Sold out</option>
+        </select>
+        <select aria-label="Discount" value={discountFilter} onChange={(e) => setDiscountFilter(e.target.value as DiscountFilter)} className={selectClass}>
+          <option value="all">Any discount</option>
+          <option value="on">With a discount</option>
+          <option value="off">No discount</option>
+        </select>
+        <select aria-label="Sort" value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={selectClass}>
+          <option value="newest">Newest first</option>
+          <option value="name">Name A to Z</option>
+          <option value="price-asc">Price: low to high</option>
+          <option value="price-desc">Price: high to low</option>
+          <option value="stock-asc">Stock: low to high</option>
+          <option value="stock-desc">Stock: high to low</option>
+        </select>
+        {filtersActive ? (
+          <button type="button" onClick={clearFilters} className="px-2 text-sm text-forest hover:underline">
+            Clear filters
+          </button>
+        ) : null}
+        <span className="ml-auto text-sm text-ink/50" aria-live="polite">
+          {visible.length} of {products.length}
+        </span>
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-2xl bg-paper shadow-[0_1px_2px_rgba(18,20,15,0.06)]">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-ink/[0.06] text-xs uppercase tracking-[0.08em] text-ink/50">
@@ -238,7 +363,19 @@ export function ProductTable({
                     <td className="py-3 text-ink/70">{p.collection ?? "-"}</td>
                     <td className="py-3 text-right tabular-nums">
                       {p.price > 0 ? (
-                        formatINR(p.price)
+                        <>
+                          {formatINR(p.price)}{" "}
+                          {p.discountPercent ? (
+                            <span
+                              title={p.discountActive ? "Discount running now" : "Discount scheduled or ended"}
+                              className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ring-1 ring-inset ${
+                                p.discountActive ? "bg-terracotta/10 text-terracotta ring-terracotta/30" : "bg-ink/5 text-ink/50 ring-ink/10"
+                              }`}
+                            >
+                              {p.discountPercent}% off
+                            </span>
+                          ) : null}
+                        </>
                       ) : (
                         <Link
                           href={`/admin/products/${p.id}`}
@@ -276,7 +413,7 @@ export function ProductTable({
         </div>
         {visible.length === 0 ? (
           <p className="px-6 py-14 text-center text-sm text-ink/50">
-            {query ? `No products match "${query}".` : "No products in this view."}
+            {filtersActive ? "No products match these filters." : "No products in this view."}
           </p>
         ) : null}
       </div>
@@ -343,6 +480,65 @@ export function ProductTable({
         </div>
       ) : null}
 
+      {/* Set-discount panel */}
+      {selected.size > 0 && discOpen ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-30 flex justify-center px-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              applyDiscount(false);
+            }}
+            className="animate-rise-in pointer-events-auto w-full max-w-sm rounded-2xl bg-paper p-5 shadow-2xl ring-1 ring-ink/10"
+          >
+            <p className="font-medium text-ink">
+              Discount for {selected.size} {selected.size === 1 ? "product" : "products"}
+            </p>
+            <p className="mt-1 text-xs text-ink/50">A percentage off each product&rsquo;s price. Dates are optional.</p>
+            <label className="mt-4 block">
+              <span className="mb-1 block text-xs uppercase tracking-[0.08em] text-ink/55">Percent off</span>
+              <input
+                autoFocus
+                inputMode="numeric"
+                value={discPercent}
+                onChange={(e) => setDiscPercent(e.target.value)}
+                placeholder="e.g. 10"
+                className="w-full rounded-lg border border-ink/15 bg-paper px-3.5 py-2.5 text-ink outline-none focus:border-forest/60 focus:ring-2 focus:ring-forest/10"
+              />
+            </label>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-1 block text-xs uppercase tracking-[0.08em] text-ink/55">Starts</span>
+                <input type="date" value={discStart} onChange={(e) => setDiscStart(e.target.value)} className="w-full rounded-lg border border-ink/15 bg-paper px-3 py-2 text-sm outline-none focus:border-forest/60" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs uppercase tracking-[0.08em] text-ink/55">Ends</span>
+                <input type="date" value={discEnd} onChange={(e) => setDiscEnd(e.target.value)} className="w-full rounded-lg border border-ink/15 bg-paper px-3 py-2 text-sm outline-none focus:border-forest/60" />
+              </label>
+            </div>
+            {discError ? (
+              <p role="alert" className="mt-3 text-sm text-rose-700">
+                {discError}
+              </p>
+            ) : null}
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={pending}
+                className="flex-1 rounded-full bg-forest px-5 py-2.5 text-sm text-cream transition-colors hover:bg-forest-deep disabled:opacity-50"
+              >
+                {pending ? "Saving..." : `Apply to ${selected.size}`}
+              </button>
+              <button type="button" disabled={pending} onClick={() => applyDiscount(true)} className="text-sm text-rose-700 hover:underline disabled:opacity-50">
+                Remove discount
+              </button>
+              <button type="button" onClick={() => setDiscOpen(false)} className="text-sm text-ink/55 hover:text-ink">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+
       {/* Bulk action bar */}
       <div
         className={`fixed inset-x-0 bottom-6 z-30 flex justify-center px-4 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
@@ -358,11 +554,24 @@ export function ProductTable({
             aria-expanded={priceOpen}
             onClick={() => {
               setPriceOpen((o) => !o);
+              setDiscOpen(false);
               setPriceError(null);
             }}
             className={`rounded-full px-4 py-1.5 transition-colors hover:bg-cream/10 ${priceOpen ? "bg-cream/10" : ""}`}
           >
             Set price
+          </button>
+          <button
+            type="button"
+            aria-expanded={discOpen}
+            onClick={() => {
+              setDiscOpen((o) => !o);
+              setPriceOpen(false);
+              setDiscError(null);
+            }}
+            className={`rounded-full px-4 py-1.5 transition-colors hover:bg-cream/10 ${discOpen ? "bg-cream/10" : ""}`}
+          >
+            Set discount
           </button>
           <button
             type="button"

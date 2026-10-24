@@ -2,6 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getStoreSettings } from "@/lib/settings";
+import { activeProductDiscount } from "@/lib/pricing";
 import { ProductTable, type AdminProductRow } from "./product-table";
 
 // Authenticated admin views always render fresh per request; navigations are
@@ -33,6 +34,8 @@ export default async function AdminProductsPage(props: PageProps<"/admin/product
     image: p.images[0]?.url ?? null,
     category: p.category?.name ?? null,
     collection: p.collection?.name ?? null,
+    discountPercent: p.discountPercent,
+    discountActive: activeProductDiscount(p) > 0,
   }));
 
   return (

@@ -26,19 +26,19 @@ export async function getActiveSales(): Promise<ActiveSale[]> {
     .sort((a, b) => b.percent - a.percent);
 }
 
-export type BarContent = { text: string; href: string } | null;
+export type BarItem = { text: string; code: string; href: string };
 
-// What the slim bar above the header says: the owner's own message if one is
-// switched on, otherwise the best running sale.
-export async function getBarContent(): Promise<BarContent> {
+// What the slim bar above the header says: the owner's own messages if they are
+// switched on, otherwise the best running collection sale.
+export async function getBarContent(): Promise<BarItem[]> {
   const custom = await getAnnouncement();
-  if (custom.enabled && custom.text.trim()) {
-    return { text: custom.text.trim(), href: custom.link.trim() || "/products" };
+  if (custom.enabled && custom.items.length > 0) {
+    return custom.items.map((i) => ({ text: i.text, code: i.code, href: i.link || "/products" }));
   }
   const [top] = await getActiveSales();
-  if (!top) return null;
+  if (!top) return [];
   const ends = top.endsAt
     ? ` · Ends ${new Date(top.endsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}`
     : "";
-  return { text: `${top.name}: ${top.label}${ends}`, href: `/collections/${top.slug}` };
+  return [{ text: `${top.name}: ${top.label}${ends}`, code: "", href: `/collections/${top.slug}` }];
 }

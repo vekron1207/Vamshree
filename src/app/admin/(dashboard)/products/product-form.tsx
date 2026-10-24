@@ -25,6 +25,9 @@ type ProductInitial = {
   categoryId?: string | null;
   collectionId?: string | null;
   variants?: VariantRow[];
+  discountPercent?: number | null;
+  discountStartsOn?: string;
+  discountEndsOn?: string;
 };
 
 type Option = { id: string; name: string };
@@ -138,6 +141,35 @@ export function ProductForm({
                 <input name="sku" defaultValue={initial?.sku ?? ""} className={inputClass} />
               </Field>
             </div>
+          </div>
+        </section>
+
+        <section className={card}>
+          <h2 className="font-medium text-ink">Discount</h2>
+          <p className="mb-4 mt-1 text-xs text-ink/50">
+            Takes a percentage off this product. If its collection also has a sale running, the bigger of the two applies; they don&rsquo;t add up.
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Field label="Percent off (blank for none)">
+                <input
+                  name="discountPercent"
+                  type="number"
+                  min="1"
+                  max="90"
+                  step="1"
+                  defaultValue={initial?.discountPercent ?? ""}
+                  placeholder="e.g. 10"
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+            <Field label="Starts (optional)">
+              <input name="discountStartsAt" type="date" defaultValue={initial?.discountStartsOn ?? ""} className={inputClass} />
+            </Field>
+            <Field label="Ends (optional)">
+              <input name="discountEndsAt" type="date" defaultValue={initial?.discountEndsOn ?? ""} className={inputClass} />
+            </Field>
           </div>
         </section>
 

@@ -62,6 +62,10 @@ model Product {
   description    String?        @db.Text
   price          Decimal        @db.Decimal(10, 2)
   compareAtPrice Decimal?       @db.Decimal(10, 2)
+  // Optional percentage off just this product, with an optional date window
+  discountPercent  Int?
+  discountStartsAt DateTime?
+  discountEndsAt   DateTime?
   sku            String?        @unique
   stock          Int            @default(0)
   isActive       Boolean        @default(true)

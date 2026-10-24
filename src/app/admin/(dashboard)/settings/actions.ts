@@ -53,14 +53,32 @@ export async function saveStore(fd: FormData): Promise<SettingsResult> {
 
 export async function saveAnnouncement(fd: FormData): Promise<SettingsResult> {
   await requireAdmin();
-  const text = String(fd.get("text") ?? "").trim().slice(0, 140);
-  const link = String(fd.get("link") ?? "").trim().slice(0, 300);
   const enabled = fd.get("enabled") === "on";
-  if (enabled && !text) return { ok: false, error: "Write the message to show, or switch the bar off." };
-  if (link && !(link.startsWith("/") && !link.startsWith("//")) && !link.startsWith("https://")) {
-    return { ok: false, error: "The link must start with / (a page on this site) or https://" };
+  let list: unknown;
+  try {
+    list = JSON.parse(String(fd.get("items") ?? "[]"));
+  } catch {
+    return { ok: false, error: "The messages could not be read. Reload the page and try again." };
   }
-  await writeSetting("announcement", { enabled, text, link });
+  if (!Array.isArray(list)) return { ok: false, error: "The messages could not be read." };
+  if (list.length > 4) return { ok: false, error: "Use up to 4 messages." };
+
+  const items: { text: string; code: string; link: string }[] = [];
+  for (const raw of list) {
+    const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+    const text = String(r.text ?? "").trim().slice(0, 140);
+    const code = String(r.code ?? "").trim().toUpperCase();
+    const link = String(r.link ?? "").trim().slice(0, 300);
+    if (!text && !code && !link) continue; // blank row
+    if (!text) return { ok: false, error: "Every message needs some text." };
+    if (code && !/^[A-Z0-9_-]{3,24}$/.test(code)) return { ok: false, error: "A coupon code is 3 to 24 letters or numbers." };
+    if (link && !(link.startsWith("/") && !link.startsWith("//")) && !link.startsWith("https://")) {
+      return { ok: false, error: "A link must start with / (a page on this site) or https://" };
+    }
+    items.push({ text, code, link });
+  }
+  if (enabled && items.length === 0) return { ok: false, error: "Add at least one message, or switch the bar off." };
+  await writeSetting("announcement", { enabled, items });
   revalidatePath("/admin/settings");
   revalidatePath("/", "layout");
   return { ok: true };

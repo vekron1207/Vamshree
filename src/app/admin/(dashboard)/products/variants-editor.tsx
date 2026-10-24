@@ -7,7 +7,7 @@ export type VariantRow = { id?: string; label: string; stock: number };
 const RING_SIZES = ["12", "13", "14", "15", "16", "17", "18", "19", "20"];
 
 const inputClass =
-  "w-full rounded-lg border border-ink/12 bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-forest/60";
+  "rounded-lg border border-ink/12 bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-forest/60";
 
 // Sizes for rings and similar. Saved with the product as one hidden JSON field.
 export function VariantsEditor({
@@ -37,16 +37,21 @@ export function VariantsEditor({
           No sizes. This product is sold as a single item using the Stock number above.
         </p>
       ) : (
+        <>
+        <div className="mb-1.5 flex items-center gap-2 pr-8 text-[11px] uppercase tracking-[0.08em] text-ink/45">
+          <span className="flex-1">Size</span>
+          <span className="w-24 shrink-0">Stock</span>
+        </div>
         <ul className="space-y-2">
           {rows.map((r, i) => (
             <li key={r.id ?? `new-${i}`} className="flex items-center gap-2">
               <input
                 aria-label="Size label"
-                placeholder="Size"
+                placeholder="Size, e.g. 14"
                 value={r.label}
                 maxLength={40}
                 onChange={(e) => commit(rows.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
-                className={inputClass}
+                className={`${inputClass} min-w-0 flex-1`}
               />
               <input
                 aria-label={`Stock for size ${r.label}`}
@@ -69,6 +74,7 @@ export function VariantsEditor({
             </li>
           ))}
         </ul>
+        </>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
         <button

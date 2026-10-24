@@ -9,6 +9,9 @@ import { updateProduct } from "../actions";
 // allowed to wait for data rather than requiring a prerendered shell.
 export const instant = false;
 
+// Stored as exact moments; the form works in India calendar days
+const istDay = (d: Date | null) => (d ? new Date(d.getTime() + 5.5 * 3600 * 1000).toISOString().slice(0, 10) : "");
+
 export default async function EditProductPage(
   props: PageProps<"/admin/products/[id]">
 ) {
@@ -63,6 +66,9 @@ export default async function EditProductPage(
           categoryId: product.categoryId,
           collectionId: product.collectionId,
           variants: product.variants.map((v) => ({ id: v.id, label: v.label, stock: v.stock })),
+          discountPercent: product.discountPercent,
+          discountStartsOn: istDay(product.discountStartsAt),
+          discountEndsOn: istDay(product.discountEndsAt),
         }}
       />
     </div>
