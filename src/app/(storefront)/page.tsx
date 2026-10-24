@@ -6,6 +6,7 @@ import { getVisibleCollections } from "@/lib/collections";
 import { Reveal } from "@/components/reveal";
 import { Slider, Slide } from "@/components/slider";
 import { HeroVideo } from "./hero-video";
+import { getHeroVideos } from "@/lib/settings";
 import { SaleBanner } from "./sale-banner";
 
 const TICKER = [
@@ -16,33 +17,45 @@ const TICKER = [
   "Tag us on Instagram",
 ];
 
+const HERO_FRAME =
+  "relative isolate flex h-[calc(100svh-4.5rem)] min-h-[30rem] items-end overflow-hidden bg-forest-deep sm:h-[calc(100svh-5rem)] lg:max-h-[56rem]";
+
+async function Hero() {
+  const hero = await getHeroVideos();
+  return (
+    <section className={HERO_FRAME}>
+      <HeroVideo portraitSrc={hero.mobile} wideSrc={hero.desktop} />
+      <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-forest-deep/80 via-forest-deep/10 to-transparent" />
+      <div className="relative mx-auto w-full max-w-6xl px-6 pb-8 text-center sm:pb-10 lg:text-left">
+        {/* The film already carries the logo, so the headline is for screen readers and search engines */}
+        <h1 className="sr-only">Vaamshri: Adorne Your Story. For every you, every story.</h1>
+        <div
+          className="animate-rise-in flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start"
+          style={{ animationDelay: '0.5s' }}
+        >
+          <Link
+            href="/products"
+            className="rounded-full bg-gold px-9 py-3.5 text-[12px] uppercase tracking-[0.18em] text-forest-deep transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-gold-soft"
+          >
+            Shop jewellery
+          </Link>
+          <Link href="#collections" className="group text-[12px] uppercase tracking-[0.18em] text-cream">
+            Explore collections
+            <span className="ml-2 inline-block transition-transform duration-300 group-hover:translate-y-0.5">&darr;</span>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   return (
     <>
       {/* Hero: the film is the first thing visitors see */}
-      <section className="relative isolate flex h-[calc(100svh-4.5rem)] min-h-[30rem] items-end overflow-hidden bg-forest-deep sm:h-[calc(100svh-5rem)] lg:max-h-[56rem]">
-        <HeroVideo portraitSrc="/brand/home-video.mp4" wideSrc="/brand/home-video-wide.mp4" />
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-forest-deep/80 via-forest-deep/10 to-transparent" />
-        <div className="relative mx-auto w-full max-w-6xl px-6 pb-8 text-center sm:pb-10 lg:text-left">
-          {/* The film already carries the logo, so the headline is for screen readers and search engines */}
-          <h1 className="sr-only">Vaamshri: Adorne Your Story. For every you, every story.</h1>
-          <div
-            className="animate-rise-in flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start"
-            style={{ animationDelay: '0.5s' }}
-          >
-            <Link
-              href="/products"
-              className="rounded-full bg-gold px-9 py-3.5 text-[12px] uppercase tracking-[0.18em] text-forest-deep transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-gold-soft"
-            >
-              Shop jewellery
-            </Link>
-            <Link href="#collections" className="group text-[12px] uppercase tracking-[0.18em] text-cream">
-              Explore collections
-              <span className="ml-2 inline-block transition-transform duration-300 group-hover:translate-y-0.5">&darr;</span>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <Suspense fallback={<section className={HERO_FRAME} aria-hidden />}>
+        <Hero />
+      </Suspense>
 
       {/* Ticker */}
       <div className="overflow-hidden" aria-hidden>

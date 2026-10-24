@@ -30,7 +30,14 @@ async function ContactContent() {
     },
   ].filter(Boolean) as { label: string; value: string; href: string; external?: boolean }[];
 
-  const hasDetails = methods.length > 0 || address || hours;
+  // Only boxes with something in them; each box keeps its own place and the grid re-balances itself
+  type Cell = { label: string; value: string; href?: string; external?: boolean; address?: boolean };
+  const cells: Cell[] = [
+    ...methods,
+    ...(address.trim() ? [{ label: "Visit", value: address, address: true }] : []),
+    ...(hours.trim() ? [{ label: "Hours", value: hours }] : []),
+  ];
+  const hasDetails = cells.length > 0;
 
   return (
     <div className="mx-auto max-w-4xl px-6 pb-24 pt-14">
@@ -48,31 +55,33 @@ async function ContactContent() {
 
       {hasDetails ? (
         <div className="mt-14 grid gap-px overflow-hidden border border-gold/30 bg-gold/30 sm:grid-cols-2">
-          {methods.map((m) => (
-            <a
-              key={m.label}
-              href={m.href}
-              {...(m.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              className="group bg-cream p-7 transition-colors hover:bg-paper"
-            >
-              <p className="text-[11px] uppercase tracking-[0.22em] text-gold">{m.label}</p>
-              <p className="mt-3 break-words font-display text-lg text-forest group-hover:underline group-hover:underline-offset-4">
-                {m.value}
-              </p>
-            </a>
-          ))}
-          {address ? (
-            <div className="bg-cream p-7">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-gold">Visit</p>
-              <address className="mt-3 whitespace-pre-line not-italic leading-relaxed text-ink/80">{address}</address>
-            </div>
-          ) : null}
-          {hours ? (
-            <div className="bg-cream p-7">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-gold">Hours</p>
-              <p className="mt-3 leading-relaxed text-ink/80">{hours}</p>
-            </div>
-          ) : null}
+          {cells.map((c, i) => {
+            // An odd number of boxes would leave a hole in the grid: the last one stretches across
+            const wide = cells.length % 2 === 1 && i === cells.length - 1 ? "sm:col-span-2" : "";
+            const label = <p className="text-[11px] uppercase tracking-[0.22em] text-gold">{c.label}</p>;
+            return c.href ? (
+              <a
+                key={c.label}
+                href={c.href}
+                {...(c.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                className={`group bg-cream p-7 transition-colors hover:bg-paper ${wide}`}
+              >
+                {label}
+                <p className="mt-3 break-words font-display text-lg text-forest group-hover:underline group-hover:underline-offset-4">
+                  {c.value}
+                </p>
+              </a>
+            ) : (
+              <div key={c.label} className={`bg-cream p-7 ${wide}`}>
+                {label}
+                {c.address ? (
+                  <address className="mt-3 whitespace-pre-line not-italic leading-relaxed text-ink/80">{c.value}</address>
+                ) : (
+                  <p className="mt-3 leading-relaxed text-ink/80">{c.value}</p>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <p className="mt-14 text-center text-ink/50">Contact details are coming soon.</p>

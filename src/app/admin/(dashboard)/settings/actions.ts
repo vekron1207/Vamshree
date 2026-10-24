@@ -83,3 +83,18 @@ export async function saveAnnouncement(fd: FormData): Promise<SettingsResult> {
   revalidatePath("/", "layout");
   return { ok: true };
 }
+
+const HERO_URL = /^\/media\/videos\/[0-9a-f-]{36}\.(mp4|webm)$/;
+
+export async function saveHeroVideos(fd: FormData): Promise<SettingsResult> {
+  await requireAdmin();
+  const desktop = String(fd.get("desktop") ?? "").trim();
+  const mobile = String(fd.get("mobile") ?? "").trim();
+  for (const v of [desktop, mobile]) {
+    if (v && !HERO_URL.test(v)) return { ok: false, error: "Upload the video again; that file isn't valid." };
+  }
+  await writeSetting("hero", { desktop, mobile });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  return { ok: true };
+}

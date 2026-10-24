@@ -72,3 +72,26 @@ export function isAllowedImageUrl(url: string) {
     return false;
   }
 }
+
+export const MAX_VIDEO_BYTES = 40 * 1024 * 1024;
+
+// Videos are checked by their opening bytes (MP4 "ftyp" box, or the WebM/Matroska header),
+// never by the file name or the type the browser claims.
+export async function saveVideoUpload(file: File): Promise<string> {
+  if (file.size === 0) throw new Error("The file is empty.");
+  if (file.size > MAX_VIDEO_BYTES) throw new Error("Videos must be 40 MB or smaller.");
+  const input = Buffer.from(await file.arrayBuffer());
+  const isMp4 = input.length > 12 && input.subarray(4, 8).toString("latin1") === "ftyp";
+  const isWebm = input.length > 4 && input[0] === 0x1a && input[1] === 0x45 && input[2] === 0xdf && input[3] === 0xa3;
+  if (!isMp4 && !isWebm) throw new Error("That file isn't a supported video. Use MP4 (H.264) or WebM.");
+
+  const name = `${crypto.randomUUID()}.${isMp4 ? "mp4" : "webm"}`;
+  const dir = path.join(uploadsRoot(), "videos");
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(path.join(dir, name), input);
+  return `/media/videos/${name}`;
+}
+
+export function videoPath(name: string) {
+  return path.join(uploadsRoot(), "videos", name);
+}

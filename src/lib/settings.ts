@@ -28,7 +28,7 @@ export type AnnouncementItem = { text: string; code: string; link: string };
 export type Announcement = { enabled: boolean; items: AnnouncementItem[] };
 export const DEFAULT_ANNOUNCEMENT: Announcement = { enabled: false, items: [] };
 
-type Key = "shipping" | "business" | "store" | "announcement";
+type Key = "shipping" | "business" | "store" | "announcement" | "hero";
 
 async function read<T>(key: Key, fallback: T): Promise<T> {
   await connection();
@@ -58,4 +58,26 @@ export async function getAnnouncement(): Promise<Announcement> {
 
 export async function writeSetting(key: Key, value: object) {
   await prisma.siteSetting.upsert({ where: { key }, update: { value }, create: { key, value } });
+}
+
+// Homepage film. Empty means "use the built-in one".
+export const DEFAULT_HERO = {
+  desktop: "/brand/home-video-wide.mp4",
+  mobile: "/brand/home-video-mobile.mp4",
+};
+const HERO_URL = /^\/media\/videos\/[0-9a-f-]{36}\.(mp4|webm)$/;
+
+export type HeroVideos = { desktop: string; mobile: string; customDesktop: boolean; customMobile: boolean };
+
+export async function getHeroVideos(): Promise<HeroVideos> {
+  const raw = await read<Record<string, unknown>>("hero", {});
+  const pick = (v: unknown) => (typeof v === "string" && HERO_URL.test(v) ? v : "");
+  const desktop = pick(raw.desktop);
+  const mobile = pick(raw.mobile);
+  return {
+    desktop: desktop || DEFAULT_HERO.desktop,
+    mobile: mobile || DEFAULT_HERO.mobile,
+    customDesktop: Boolean(desktop),
+    customMobile: Boolean(mobile),
+  };
 }
